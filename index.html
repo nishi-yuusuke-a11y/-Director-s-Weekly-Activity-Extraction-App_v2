@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>センター長代理週報 事務所別活動抽出アプリ v2</title>
+<style>
+:root{
+  --navy:#20406e; --navy2:#2f5597; --line:#dfe5ee; --bg:#f4f6fa; --txt:#1f2a37; --sub:#6b7686;
+  --ok:#0f7b52; --warn:#9a6b00; --err:#b3261e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);
+  font-family:"Yu Gothic UI","Meiryo","Hiragino Kaku Gothic ProN",sans-serif;font-size:14px;line-height:1.6}
+header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:18px 24px}
+header h1{margin:0;font-size:19px;letter-spacing:.04em}
+header p{margin:4px 0 0;font-size:12px;opacity:.85}
+.wrap{max-width:1280px;margin:0 auto;padding:18px 16px 60px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px;
+  box-shadow:0 1px 2px rgba(20,40,80,.05)}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--navy);border-left:4px solid var(--navy2);padding-left:9px}
+.step{display:inline-block;background:var(--navy2);color:#fff;border-radius:11px;padding:1px 9px;font-size:11px;margin-right:7px}
+#dropzone{border:2px dashed #a9bcd8;border-radius:10px;background:#fbfcff;padding:26px;text-align:center;cursor:pointer;transition:.15s}
+#dropzone:hover,#dropzone.over{background:#eef4ff;border-color:var(--navy2)}
+#dropzone b{color:var(--navy2)}
+#dropzone .hint{color:var(--sub);font-size:12px;margin-top:6px}
+#filelist{margin-top:10px}
+.chip{display:inline-block;background:#eef2f9;border:1px solid var(--line);border-radius:14px;
+  padding:2px 10px;margin:3px 5px 0 0;font-size:12px}
+.chip b{cursor:pointer;color:var(--err);margin-left:5px}
+#summary{display:none;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
+.kpi{background:#f7f9fd;border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+.kpi span{display:block;font-size:11px;color:var(--sub)}
+.kpi strong{font-size:16px;color:var(--navy)}
+.row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.col{flex:1 1 300px;min-width:280px}
+label.lbl{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+input[type=text],input[type=date],select{width:100%;padding:8px 10px;border:1px solid #c7d0de;border-radius:6px;
+  font-size:14px;font-family:inherit;background:#fff}
+input[type=text]:focus,input[type=date]:focus,select:focus{outline:2px solid #b9cdf0;border-color:var(--navy2)}
+.opt{display:inline-flex;align-items:center;gap:5px;margin:3px 14px 3px 0;font-size:13px;cursor:pointer}
+.btn{background:var(--navy2);color:#fff;border:0;border-radius:6px;padding:9px 20px;font-size:14px;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--navy)}
+.btn.sub{background:#fff;color:var(--navy2);border:1px solid var(--navy2)}
+.btn.sub:hover{background:#eef4ff}
+.btn.ghost{background:transparent;color:var(--sub);border:1px solid var(--line)}
+.btn.sm{padding:5px 12px;font-size:12px}
+.btn.link{background:#107c41;color:#fff;border:0}
+.btn.link:hover{background:#0b5f31}
+.btn.link:before{content:"\1F4D7";margin-right:6px}
+.actions{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#report-hint{display:none;background:#eaf6ee;border:1px solid #b6ddc4;border-radius:8px;padding:9px 12px;margin-top:10px;font-size:12.5px}
+#report-hint ol{margin:6px 0 0 18px;padding:0}
+#report-hint li{margin:2px 0}
+#result-card{display:none}
+.resbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.resbar .big{font-size:20px;color:var(--navy);font-weight:700}
+#suggest{display:none;background:#fff9e8;border:1px solid #f0dca6;border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:13px}
+#other-center{display:none;background:#fff3f2;border:1px solid #f2c2bd;border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:12.5px;color:#7a2018}
+#diag{display:none;background:#eef6ff;border:1px solid #bfd6f5;border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:12.5px}
+#audit-result{display:none;margin-top:10px;background:#fbfcfe;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12.5px}
+.auditbar{color:var(--sub);margin-bottom:6px}
+.ok2{color:var(--ok);font-weight:600}
+.ng2{color:var(--warn)}
+.warn2{color:var(--err)}
+
+/* ---------- 表 ---------- */
+.tblwrap{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;font-size:12.5px}
+table.plain{width:100%}
+th{position:sticky;top:0;background:var(--navy2);color:#fff;padding:8px 9px;text-align:left;font-weight:600;white-space:nowrap;z-index:2}
+td{border-bottom:1px solid #eef1f6;padding:7px 9px;vertical-align:top}
+tr:nth-child(even) td{background:#fafbfe}
+tr.rowbody td{background:#fffaf0}
+td.nw{white-space:nowrap}
+.clamp{max-height:4.8em;overflow:hidden;position:relative;cursor:pointer}
+.clamp:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.4em;background:linear-gradient(transparent,#fff)}
+.clamp.open{max-height:none}
+.clamp.open:after{display:none}
+.sub{color:var(--sub);font-size:11px}
+.tag{display:inline-block;border-radius:10px;padding:1px 8px;font-size:11px;color:#fff}
+.t-event{background:#00838f}.t-kobetsu{background:#ef6c00}.t-nm{background:#5d4037}.t-jikei{background:#2e7d32}.t-cloud{background:#1565c0}.t-fx4{background:#6a1b9a}.t-oms{background:#c62828}
+.badge{display:inline-block;border-radius:4px;padding:1px 6px;font-size:10.5px;white-space:nowrap}
+.b-name{background:#e6eefb;color:#25406b;border:1px solid #c3d6f2}
+.b-body{background:#fdefd2;color:#8a5b00;border:1px solid #f0d093}
+.empty{text-align:center;color:var(--sub);padding:22px}
+
+/* ---------- ★列幅調整 ---------- */
+#tbl-res{table-layout:fixed}
+#tbl-res th{position:sticky;top:0;padding-right:14px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#tbl-res th .thlabel{display:block;overflow:hidden;text-overflow:ellipsis}
+#tbl-res td{overflow:hidden;word-break:break-word;white-space:normal}
+.resizer{position:absolute;top:0;right:0;width:9px;height:100%;cursor:col-resize;
+  user-select:none;z-index:3;background:transparent}
+.resizer:before{content:"";position:absolute;top:22%;bottom:22%;right:4px;width:2px;
+  background:rgba(255,255,255,.45);border-radius:1px}
+.resizer:hover:before{background:#fff;top:8%;bottom:8%}
+body.col-resizing{cursor:col-resize;user-select:none}
+body.col-resizing *{cursor:col-resize!important}
+#measure{position:absolute;visibility:hidden;white-space:nowrap;
+  font-family:"Yu Gothic UI","Meiryo",sans-serif;font-size:12.5px;padding:7px 9px;left:-9999px;top:0}
+.colhint{color:var(--sub);font-size:11.5px;margin:0 0 6px}
+
+#limit-note{display:none;color:var(--warn);font-size:12px;margin-top:6px}
+#log{max-height:130px;overflow:auto;background:#fbfcfe;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12px;margin-top:10px}
+.log-line.ok{color:var(--ok)}.log-line.warn{color:var(--warn)}.log-line.err{color:var(--err)}
+#gaz-toggle,#scglist-toggle{cursor:pointer;color:var(--navy2);font-size:12.5px;user-select:none}
+#scglist-body{display:none;margin-top:9px}
+.scg{display:inline-block;background:#eef7f1;border:1px solid #cbe4d6;border-radius:12px;padding:2px 9px;margin:3px 5px 0 0;font-size:12px;cursor:pointer}
+.scg:hover{background:#daeee4}
+.scg i{color:var(--sub);font-style:normal;margin-left:5px;font-size:11px}
+#gaz-body{display:none;margin-top:9px}
+.gaz{display:inline-block;background:#eef2f9;border:1px solid var(--line);border-radius:12px;padding:2px 9px;margin:3px 5px 0 0;font-size:12px;cursor:pointer}
+.gaz:hover{background:#dfe9fb}
+.gaz i{color:var(--sub);font-style:normal;margin-left:5px;font-size:11px}
+.more{color:var(--sub);font-size:12px;margin-left:6px}
+#busy{display:none;position:fixed;inset:0;background:rgba(255,255,255,.65);z-index:99;align-items:center;justify-content:center}
+.spinner{width:42px;height:42px;border:4px solid #d6e0f2;border-top-color:var(--navy2);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.note{font-size:11.5px;color:var(--sub);margin-top:6px}
+a{color:var(--navy2)}
+</style>
+</head>
+<body>
+<div id="busy"><div class="spinner"></div></div>
+<span id="measure"></span>
+<header>
+  <h1>センター長代理週報 事務所別活動抽出アプリ　v2</h1>
+  <p>代理週報Excelを取り込み、Ｇ～Ｍ列の活動を会員事務所・未入会税理士ごとに時系列で抽出・Excel出力します。／ 検索結果の列幅はドラッグで調整できます。データはブラウザ内でのみ処理され、外部送信は行いません。</p>
+</header>
+<div class="wrap">
+
+  <div class="card">
+    <h2><span class="step">第１フェーズ ①</span>ファイル取込</h2>
+    <div id="dropzone">
+      <div><b>ここにセンター長代理週報Excel（.xlsx）をドラッグ＆ドロップ</b>／クリックして選択</div>
+      <div class="hint">複数期間のファイルをまとめて取込可能です。応答ＩＤ・日時・氏名・センターが同一の行は自動で重複除外します。列は見出し名（「自計化推進活動」等）で自動判定します。</div>
+    </div>
+    <input type="file" id="filepick" accept=".xlsx" multiple style="display:none">
+    <div id="filelist"></div>
+    <div id="summary">
+      <div class="kpi"><span>取込ファイル</span><strong id="sum-files">0</strong></div>
+      <div class="kpi"><span>活動レコード</span><strong id="sum-rows">0</strong></div>
+      <div class="kpi"><span>抽出名称数（事務所・税理士）</span><strong id="sum-offices">0</strong></div>
+      <div class="kpi"><span>対象期間</span><strong id="sum-period">－</strong></div>
+      <div class="kpi"><span>名称未特定</span><strong id="sum-unknown">－</strong></div>
+    </div>
+    <div id="log"></div>
+    <div class="actions">
+      <button class="btn ghost" id="btn-reset">取込データを全消去</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">② ③ ④</span>抽出条件</h2>
+    <div class="row">
+      <div class="col">
+        <label class="lbl">センター（初期表示：神戸）</label>
+        <select id="center"><option value="">すべてのセンター</option></select>
+        <label class="lbl" style="margin-top:10px">センター長代理（氏名を直接入力）</label>
+        <input type="text" id="scg" placeholder="例：山本　※空欄の場合は全員">
+        <div style="margin-top:6px">
+          <label class="opt"><input type="radio" name="scgmode" id="scg-partial" checked>部分一致</label>
+          <label class="opt"><input type="radio" name="scgmode" id="scg-exact">完全一致</label>
+        </div>
+        <div id="scg-hint" class="note"></div>
+        <label class="lbl" style="margin-top:10px">② 会員事務所名／税理士名（直接入力）</label>
+        <input type="text" id="office" placeholder="例：よつば会計事務所、林田充司　※空欄の場合はすべて">
+        <div style="margin-top:6px">
+          <label class="opt"><input type="radio" name="mode" id="mode-partial" checked>部分一致</label>
+          <label class="opt"><input type="radio" name="mode" id="mode-exact">完全一致</label>
+        </div>
+        <div style="margin-top:2px">
+          <label class="opt"><input type="checkbox" id="inc-body"><b>本文中の言及も検索する（取りこぼし防止）</b></label>
+        </div>
+        <div class="note">全角／半角・スペース・記号に加え、<b>異体字（髙＝高、﨑＝崎、澤＝沢 等）と半角カナ</b>も自動で吸収して照合します。</div>
+      </div>
+      <div class="col">
+        <label class="lbl">③ 出力する内容</label>
+        <label class="opt"><input type="checkbox" id="cat-all" checked><b>すべて（Ｇ～Ｍ列）</b></label><br>
+        <label class="opt"><input type="checkbox" id="cat-event" checked>Ｇ 会員導入（電話作戦・イベント関係など）</label><br>
+        <label class="opt"><input type="checkbox" id="cat-kobetsu" checked>Ｈ 会員導入（未入会への個別提案）</label><br>
+        <div id="proc-box" style="margin:0 0 6px 22px;padding:6px 10px;background:#fff6ec;border:1px solid #f3d3ad;border-radius:6px">
+          <div style="font-size:12px;color:#8a4b00;margin-bottom:2px"><b>Ｈの活動プロセスで絞り込み</b></div>
+          <label class="opt"><input type="checkbox" id="proc-all" checked><b>すべて</b></label><br>
+          <span id="proc-list"></span>
+          <div class="note" style="margin-top:2px">「(1) 活動プロセス」欄の記載で判定します。「リード獲得／課題把握」のように複数書かれた活動は、どちらを選んでも表示されます。Ｈ以外の区分には影響しません。</div>
+        </div>
+        <label class="opt"><input type="checkbox" id="cat-nm" checked>Ｉ ＮＭ会員フォロー</label>
+        <label class="opt"><input type="checkbox" id="cat-jikei" checked>Ｊ 自計化推進活動</label><br>
+        <label class="opt"><input type="checkbox" id="cat-cloud" checked>Ｋ クラウド移行特選事務所への推進活動</label><br>
+        <label class="opt"><input type="checkbox" id="cat-fx4" checked>Ｌ ＦＸ４クラウド推進活動</label>
+        <label class="opt"><input type="checkbox" id="cat-oms" checked>Ｍ ＯＭＳ、ＴＰＳ、ＨＰ推進活動</label>
+        <div style="margin-top:8px;border-top:1px dashed var(--line);padding-top:6px">
+          <label class="opt"><input type="checkbox" id="opt-oneline">活動内容が１行のみのものを除外する</label>
+          <div class="note">代理週報は改行せずに１行で書かれた報告も多いため、初期値はOFFです。</div>
+        </div>
+      </div>
+      <div class="col">
+        <label class="lbl">④ 出力する期間</label>
+        <label class="opt"><input type="radio" name="period" id="period-all" checked>すべて</label>
+        <label class="opt"><input type="radio" name="period" id="period-range">指定期間</label>
+        <div class="row" style="gap:8px;margin-top:6px">
+          <div class="col" style="min-width:140px"><input type="date" id="date-from"></div>
+          <div class="col" style="min-width:140px"><input type="date" id="date-to"></div>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btn-search">検索する</button>
+      <button class="btn sub" id="btn-audit">全事務所の取りこぼしを一括診断</button>
+      <button class="btn ghost" id="btn-clear">入力条件をクリア</button>
+    </div>
+    <div id="audit-result"></div>
+    <div style="margin-top:12px">
+      <div id="gaz-toggle">参考：抽出された事務所名・税理士名一覧を開く ▼</div>
+      <div id="gaz-body">
+        <input type="text" id="gaz-filter" placeholder="一覧を絞り込む（クリックで②に入力）" style="max-width:360px">
+        <span class="more" id="gaz-count"></span>
+        <div id="gaz-list" style="margin-top:6px;max-height:190px;overflow:auto"></div>
+        <div class="note">※ 選択した「センター」に連動して絞り込まれます。表記確認用の一覧です（会員事務所名と未入会の税理士名を含みます）。</div>
+      </div>
+    </div>
+    <div style="margin-top:8px">
+      <div id="scglist-toggle">参考：代理（氏名）一覧を開く ▼</div>
+      <div id="scglist-body">
+        <span class="more" id="scg-count"></span>
+        <div id="scg-list" style="margin-top:6px;max-height:190px;overflow:auto"></div>
+        <div class="note">※ 選択した「センター」に連動します。クリックすると上の入力欄に反映されます。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="result-card">
+    <h2><span class="step">第２フェーズ</span>検索結果（時系列）</h2>
+    <div class="resbar">
+      <div><span class="big" id="res-count">0</span> 件</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost sm" id="btn-fullall">全文表示</button>
+        <button class="btn ghost sm" id="btn-fit">列幅を自動調整</button>
+        <button class="btn ghost sm" id="btn-colreset">列幅をリセット</button>
+        <button class="btn sub" id="btn-export">Excelファイルで出力</button>
+      </div>
+    </div>
+    <div id="res-detail" class="note" style="margin-bottom:8px"></div>
+    <div id="other-center"></div>
+    <div id="diag"></div>
+    <div id="suggest"></div>
+    <p class="colhint">「会員事務所名／税理士名」列の下段：<b>項目名</b>＝週報の「会員事務所名／税理士名」欄から取得、<b>型推定</b>＝名称だけの行から取得、<b>文中推定</b>＝文章中の「○○会計」「税理士法人○○」等から推定、<b>未特定</b>＝名称なし。<br>💡 見出しの右端の境界を<b>ドラッグ</b>すると列幅を変更できます。境界を<b>ダブルクリック</b>すると内容に合わせて自動調整します（幅はこのブラウザに保存されます）。</p>
+    <div class="tblwrap">
+      <table id="tbl-res">
+        <colgroup id="colgroup-res"></colgroup>
+        <thead id="thead-res"></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="limit-note"></div>
+  </div>
+</div>
+<script>/*!
+
+JSZip v3.10.1 - A JavaScript class for generating and reading zip files
+<http://stuartk.com/jszip>
+
+(c) 2009-2016 Stuart Knightley <stuart [at] stuartk.com>
+Dual licenced under the MIT license or GPLv3. See https://raw.github.com/Stuk/jszip/main/LICENSE.markdown.
+
+JSZip uses the library pako released under the MIT license :
+https://github.com/nodeca/pako/blob/main/LICENSE
+*/
+
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{("undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this).JSZip=e()}}(function(){return function s(a,o,h){function u(r,e){if(!o[r]){if(!a[r]){var t="function"==typeof require&&require;if(!e&&t)return t(r,!0);if(l)return l(r,!0);var n=new Error("Cannot find module '"+r+"'");throw n.code="MODULE_NOT_FOUND",n}var i=o[r]={exports:{}};a[r][0].call(i.exports,function(e){var t=a[r][1][e];return u(t||e)},i,i.exports,s,a,o,h)}return o[r].exports}for(var l="function"==typeof require&&require,e=0;e<h.length;e++)u(h[e]);return u}({1:[function(e,t,r){"use strict";var d=e("./utils"),c=e("./support"),p="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";r.encode=function(e){for(var t,r,n,i,s,a,o,h=[],u=0,l=e.length,f=l,c="string"!==d.getTypeOf(e);u<e.length;)f=l-u,n=c?(t=e[u++],r=u<l?e[u++]:0,u<l?e[u++]:0):(t=e.charCodeAt(u++),r=u<l?e.charCodeAt(u++):0,u<l?e.charCodeAt(u++):0),i=t>>2,s=(3&t)<<4|r>>4,a=1<f?(15&r)<<2|n>>6:64,o=2<f?63&n:64,h.push(p.charAt(i)+p.charAt(s)+p.charAt(a)+p.charAt(o));return h.join("")},r.decode=function(e){var t,r,n,i,s,a,o=0,h=0,u="data:";if(e.substr(0,u.length)===u)throw new Error("Invalid base64 input, it looks like a data url.");var l,f=3*(e=e.replace(/[^A-Za-z0-9+/=]/g,"")).length/4;if(e.charAt(e.length-1)===p.charAt(64)&&f--,e.charAt(e.length-2)===p.charAt(64)&&f--,f%1!=0)throw new Error("Invalid base64 input, bad content length.");for(l=c.uint8array?new Uint8Array(0|f):new Array(0|f);o<e.length;)t=p.indexOf(e.charAt(o++))<<2|(i=p.indexOf(e.charAt(o++)))>>4,r=(15&i)<<4|(s=p.indexOf(e.charAt(o++)))>>2,n=(3&s)<<6|(a=p.indexOf(e.charAt(o++))),l[h++]=t,64!==s&&(l[h++]=r),64!==a&&(l[h++]=n);return l}},{"./support":30,"./utils":32}],2:[function(e,t,r){"use strict";var n=e("./external"),i=e("./stream/DataWorker"),s=e("./stream/Crc32Probe"),a=e("./stream/DataLengthProbe");function o(e,t,r,n,i){this.compressedSize=e,this.uncompressedSize=t,this.crc32=r,this.compression=n,this.compressedContent=i}o.prototype={getContentWorker:function(){var e=new i(n.Promise.resolve(this.compressedContent)).pipe(this.compression.uncompressWorker()).pipe(new a("data_length")),t=this;return e.on("end",function(){if(this.streamInfo.data_length!==t.uncompressedSize)throw new Error("Bug : uncompressed data size mismatch")}),e},getCompressedWorker:function(){return new i(n.Promise.resolve(this.compressedContent)).withStreamInfo("compressedSize",this.compressedSize).withStreamInfo("uncompressedSize",this.uncompressedSize).withStreamInfo("crc32",this.crc32).withStreamInfo("compression",this.compression)}},o.createWorkerFrom=function(e,t,r){return e.pipe(new s).pipe(new a("uncompressedSize")).pipe(t.compressWorker(r)).pipe(new a("compressedSize")).withStreamInfo("compression",t)},t.exports=o},{"./external":6,"./stream/Crc32Probe":25,"./stream/DataLengthProbe":26,"./stream/DataWorker":27}],3:[function(e,t,r){"use strict";var n=e("./stream/GenericWorker");r.STORE={magic:"\0\0",compressWorker:function(){return new n("STORE compression")},uncompressWorker:function(){return new n("STORE decompression")}},r.DEFLATE=e("./flate")},{"./flate":7,"./stream/GenericWorker":28}],4:[function(e,t,r){"use strict";var n=e("./utils");var o=function(){for(var e,t=[],r=0;r<256;r++){e=r;for(var n=0;n<8;n++)e=1&e?3988292384^e>>>1:e>>>1;t[r]=e}return t}();t.exports=function(e,t){return void 0!==e&&e.length?"string"!==n.getTypeOf(e)?function(e,t,r,n){var i=o,s=n+r;e^=-1;for(var a=n;a<s;a++)e=e>>>8^i[255&(e^t[a])];return-1^e}(0|t,e,e.length,0):function(e,t,r,n){var i=o,s=n+r;e^=-1;for(var a=n;a<s;a++)e=e>>>8^i[255&(e^t.charCodeAt(a))];return-1^e}(0|t,e,e.length,0):0}},{"./utils":32}],5:[function(e,t,r){"use strict";r.base64=!1,r.binary=!1,r.dir=!1,r.createFolders=!0,r.date=null,r.compression=null,r.compressionOptions=null,r.comment=null,r.unixPermissions=null,r.dosPermissions=null},{}],6:[function(e,t,r){"use strict";var n=null;n="undefined"!=typeof Promise?Promise:e("lie"),t.exports={Promise:n}},{lie:37}],7:[function(e,t,r){"use strict";var n="undefined"!=typeof Uint8Array&&"undefined"!=typeof Uint16Array&&"undefined"!=typeof Uint32Array,i=e("pako"),s=e("./utils"),a=e("./stream/GenericWorker"),o=n?"uint8array":"array";function h(e,t){a.call(this,"FlateWorker/"+e),this._pako=null,this._pakoAction=e,this._pakoOptions=t,this.meta={}}r.magic="\b\0",s.inherits(h,a),h.prototype.processChunk=function(e){this.meta=e.meta,null===this._pako&&this._createPako(),this._pako.push(s.transformTo(o,e.data),!1)},h.prototype.flush=function(){a.prototype.flush.call(this),null===this._pako&&this._createPako(),this._pako.push([],!0)},h.prototype.cleanUp=function(){a.prototype.cleanUp.call(this),this._pako=null},h.prototype._createPako=function(){this._pako=new i[this._pakoAction]({raw:!0,level:this._pakoOptions.level||-1});var t=this;this._pako.onData=function(e){t.push({data:e,meta:t.meta})}},r.compressWorker=function(e){return new h("Deflate",e)},r.uncompressWorker=function(){return new h("Inflate",{})}},{"./stream/GenericWorker":28,"./utils":32,pako:38}],8:[function(e,t,r){"use strict";function A(e,t){var r,n="";for(r=0;r<t;r++)n+=String.fromCharCode(255&e),e>>>=8;return n}function n(e,t,r,n,i,s){var a,o,h=e.file,u=e.compression,l=s!==O.utf8encode,f=I.transformTo("string",s(h.name)),c=I.transformTo("string",O.utf8encode(h.name)),d=h.comment,p=I.transformTo("string",s(d)),m=I.transformTo("string",O.utf8encode(d)),_=c.length!==h.name.length,g=m.length!==d.length,b="",v="",y="",w=h.dir,k=h.date,x={crc32:0,compressedSize:0,uncompressedSize:0};t&&!r||(x.crc32=e.crc32,x.compressedSize=e.compressedSize,x.uncompressedSize=e.uncompressedSize);var S=0;t&&(S|=8),l||!_&&!g||(S|=2048);var z=0,C=0;w&&(z|=16),"UNIX"===i?(C=798,z|=function(e,t){var r=e;return e||(r=t?16893:33204),(65535&r)<<16}(h.unixPermissions,w)):(C=20,z|=function(e){return 63&(e||0)}(h.dosPermissions)),a=k.getUTCHours(),a<<=6,a|=k.getUTCMinutes(),a<<=5,a|=k.getUTCSeconds()/2,o=k.getUTCFullYear()-1980,o<<=4,o|=k.getUTCMonth()+1,o<<=5,o|=k.getUTCDate(),_&&(v=A(1,1)+A(B(f),4)+c,b+="up"+A(v.length,2)+v),g&&(y=A(1,1)+A(B(p),4)+m,b+="uc"+A(y.length,2)+y);var E="";return E+="\n\0",E+=A(S,2),E+=u.magic,E+=A(a,2),E+=A(o,2),E+=A(x.crc32,4),E+=A(x.compressedSize,4),E+=A(x.uncompressedSize,4),E+=A(f.length,2),E+=A(b.length,2),{fileRecord:R.LOCAL_FILE_HEADER+E+f+b,dirRecord:R.CENTRAL_FILE_HEADER+A(C,2)+E+A(p.length,2)+"\0\0\0\0"+A(z,4)+A(n,4)+f+b+p}}var I=e("../utils"),i=e("../stream/GenericWorker"),O=e("../utf8"),B=e("../crc32"),R=e("../signature");function s(e,t,r,n){i.call(this,"ZipFileWorker"),this.bytesWritten=0,this.zipComment=t,this.zipPlatform=r,this.encodeFileName=n,this.streamFiles=e,this.accumulate=!1,this.contentBuffer=[],this.dirRecords=[],this.currentSourceOffset=0,this.entriesCount=0,this.currentFile=null,this._sources=[]}I.inherits(s,i),s.prototype.push=function(e){var t=e.meta.percent||0,r=this.entriesCount,n=this._sources.length;this.accumulate?this.contentBuffer.push(e):(this.bytesWritten+=e.data.length,i.prototype.push.call(this,{data:e.data,meta:{currentFile:this.currentFile,percent:r?(t+100*(r-n-1))/r:100}}))},s.prototype.openedSource=function(e){this.currentSourceOffset=this.bytesWritten,this.currentFile=e.file.name;var t=this.streamFiles&&!e.file.dir;if(t){var r=n(e,t,!1,this.currentSourceOffset,this.zipPlatform,this.encodeFileName);this.push({data:r.fileRecord,meta:{percent:0}})}else this.accumulate=!0},s.prototype.closedSource=function(e){this.accumulate=!1;var t=this.streamFiles&&!e.file.dir,r=n(e,t,!0,this.currentSourceOffset,this.zipPlatform,this.encodeFileName);if(this.dirRecords.push(r.dirRecord),t)this.push({data:function(e){return R.DATA_DESCRIPTOR+A(e.crc32,4)+A(e.compressedSize,4)+A(e.uncompressedSize,4)}(e),meta:{percent:100}});else for(this.push({data:r.fileRecord,meta:{percent:0}});this.contentBuffer.length;)this.push(this.contentBuffer.shift());this.currentFile=null},s.prototype.flush=function(){for(var e=this.bytesWritten,t=0;t<this.dirRecords.length;t++)this.push({data:this.dirRecords[t],meta:{percent:100}});var r=this.bytesWritten-e,n=function(e,t,r,n,i){var s=I.transformTo("string",i(n));return R.CENTRAL_DIRECTORY_END+"\0\0\0\0"+A(e,2)+A(e,2)+A(t,4)+A(r,4)+A(s.length,2)+s}(this.dirRecords.length,r,e,this.zipComment,this.encodeFileName);this.push({data:n,meta:{percent:100}})},s.prototype.prepareNextSource=function(){this.previous=this._sources.shift(),this.openedSource(this.previous.streamInfo),this.isPaused?this.previous.pause():this.previous.resume()},s.prototype.registerPrevious=function(e){this._sources.push(e);var t=this;return e.on("data",function(e){t.processChunk(e)}),e.on("end",function(){t.closedSource(t.previous.streamInfo),t._sources.length?t.prepareNextSource():t.end()}),e.on("error",function(e){t.error(e)}),this},s.prototype.resume=function(){return!!i.prototype.resume.call(this)&&(!this.previous&&this._sources.length?(this.prepareNextSource(),!0):this.previous||this._sources.length||this.generatedError?void 0:(this.end(),!0))},s.prototype.error=function(e){var t=this._sources;if(!i.prototype.error.call(this,e))return!1;for(var r=0;r<t.length;r++)try{t[r].error(e)}catch(e){}return!0},s.prototype.lock=function(){i.prototype.lock.call(this);for(var e=this._sources,t=0;t<e.length;t++)e[t].lock()},t.exports=s},{"../crc32":4,"../signature":23,"../stream/GenericWorker":28,"../utf8":31,"../utils":32}],9:[function(e,t,r){"use strict";var u=e("../compressions"),n=e("./ZipFileWorker");r.generateWorker=function(e,a,t){var o=new n(a.streamFiles,t,a.platform,a.encodeFileName),h=0;try{e.forEach(function(e,t){h++;var r=function(e,t){var r=e||t,n=u[r];if(!n)throw new Error(r+" is not a valid compression method !");return n}(t.options.compression,a.compression),n=t.options.compressionOptions||a.compressionOptions||{},i=t.dir,s=t.date;t._compressWorker(r,n).withStreamInfo("file",{name:e,dir:i,date:s,comment:t.comment||"",unixPermissions:t.unixPermissions,dosPermissions:t.dosPermissions}).pipe(o)}),o.entriesCount=h}catch(e){o.error(e)}return o}},{"../compressions":3,"./ZipFileWorker":8}],10:[function(e,t,r){"use strict";function n(){if(!(this instanceof n))return new n;if(arguments.length)throw new Error("The constructor with parameters has been removed in JSZip 3.0, please check the upgrade guide.");this.files=Object.create(null),this.comment=null,this.root="",this.clone=function(){var e=new n;for(var t in this)"function"!=typeof this[t]&&(e[t]=this[t]);return e}}(n.prototype=e("./object")).loadAsync=e("./load"),n.support=e("./support"),n.defaults=e("./defaults"),n.version="3.10.1",n.loadAsync=function(e,t){return(new n).loadAsync(e,t)},n.external=e("./external"),t.exports=n},{"./defaults":5,"./external":6,"./load":11,"./object":15,"./support":30}],11:[function(e,t,r){"use strict";var u=e("./utils"),i=e("./external"),n=e("./utf8"),s=e("./zipEntries"),a=e("./stream/Crc32Probe"),l=e("./nodejsUtils");function f(n){return new i.Promise(function(e,t){var r=n.decompressed.getContentWorker().pipe(new a);r.on("error",function(e){t(e)}).on("end",function(){r.streamInfo.crc32!==n.decompressed.crc32?t(new Error("Corrupted zip : CRC32 mismatch")):e()}).resume()})}t.exports=function(e,o){var h=this;return o=u.extend(o||{},{base64:!1,checkCRC32:!1,optimizedBinaryString:!1,createFolders:!1,decodeFileName:n.utf8decode}),l.isNode&&l.isStream(e)?i.Promise.reject(new Error("JSZip can't accept a stream when loading a zip file.")):u.prepareContent("the loaded zip file",e,!0,o.optimizedBinaryString,o.base64).then(function(e){var t=new s(o);return t.load(e),t}).then(function(e){var t=[i.Promise.resolve(e)],r=e.files;if(o.checkCRC32)for(var n=0;n<r.length;n++)t.push(f(r[n]));return i.Promise.all(t)}).then(function(e){for(var t=e.shift(),r=t.files,n=0;n<r.length;n++){var i=r[n],s=i.fileNameStr,a=u.resolve(i.fileNameStr);h.file(a,i.decompressed,{binary:!0,optimizedBinaryString:!0,date:i.date,dir:i.dir,comment:i.fileCommentStr.length?i.fileCommentStr:null,unixPermissions:i.unixPermissions,dosPermissions:i.dosPermissions,createFolders:o.createFolders}),i.dir||(h.file(a).unsafeOriginalName=s)}return t.zipComment.length&&(h.comment=t.zipComment),h})}},{"./external":6,"./nodejsUtils":14,"./stream/Crc32Probe":25,"./utf8":31,"./utils":32,"./zipEntries":33}],12:[function(e,t,r){"use strict";var n=e("../utils"),i=e("../stream/GenericWorker");function s(e,t){i.call(this,"Nodejs stream input adapter for "+e),this._upstreamEnded=!1,this._bindStream(t)}n.inherits(s,i),s.prototype._bindStream=function(e){var t=this;(this._stream=e).pause(),e.on("data",function(e){t.push({data:e,meta:{percent:0}})}).on("error",function(e){t.isPaused?this.generatedError=e:t.error(e)}).on("end",function(){t.isPaused?t._upstreamEnded=!0:t.end()})},s.prototype.pause=function(){return!!i.prototype.pause.call(this)&&(this._stream.pause(),!0)},s.prototype.resume=function(){return!!i.prototype.resume.call(this)&&(this._upstreamEnded?this.end():this._stream.resume(),!0)},t.exports=s},{"../stream/GenericWorker":28,"../utils":32}],13:[function(e,t,r){"use strict";var i=e("readable-stream").Readable;function n(e,t,r){i.call(this,t),this._helper=e;var n=this;e.on("data",function(e,t){n.push(e)||n._helper.pause(),r&&r(t)}).on("error",function(e){n.emit("error",e)}).on("end",function(){n.push(null)})}e("../utils").inherits(n,i),n.prototype._read=function(){this._helper.resume()},t.exports=n},{"../utils":32,"readable-stream":16}],14:[function(e,t,r){"use strict";t.exports={isNode:"undefined"!=typeof Buffer,newBufferFrom:function(e,t){if(Buffer.from&&Buffer.from!==Uint8Array.from)return Buffer.from(e,t);if("number"==typeof e)throw new Error('The "data" argument must not be a number');return new Buffer(e,t)},allocBuffer:function(e){if(Buffer.alloc)return Buffer.alloc(e);var t=new Buffer(e);return t.fill(0),t},isBuffer:function(e){return Buffer.isBuffer(e)},isStream:function(e){return e&&"function"==typeof e.on&&"function"==typeof e.pause&&"function"==typeof e.resume}}},{}],15:[function(e,t,r){"use strict";function s(e,t,r){var n,i=u.getTypeOf(t),s=u.extend(r||{},f);s.date=s.date||new Date,null!==s.compression&&(s.compression=s.compression.toUpperCase()),"string"==typeof s.unixPermissions&&(s.unixPermissions=parseInt(s.unixPermissions,8)),s.unixPermissions&&16384&s.unixPermissions&&(s.dir=!0),s.dosPermissions&&16&s.dosPermissions&&(s.dir=!0),s.dir&&(e=g(e)),s.createFolders&&(n=_(e))&&b.call(this,n,!0);var a="string"===i&&!1===s.binary&&!1===s.base64;r&&void 0!==r.binary||(s.binary=!a),(t instanceof c&&0===t.uncompressedSize||s.dir||!t||0===t.length)&&(s.base64=!1,s.binary=!0,t="",s.compression="STORE",i="string");var o=null;o=t instanceof c||t instanceof l?t:p.isNode&&p.isStream(t)?new m(e,t):u.prepareContent(e,t,s.binary,s.optimizedBinaryString,s.base64);var h=new d(e,o,s);this.files[e]=h}var i=e("./utf8"),u=e("./utils"),l=e("./stream/GenericWorker"),a=e("./stream/StreamHelper"),f=e("./defaults"),c=e("./compressedObject"),d=e("./zipObject"),o=e("./generate"),p=e("./nodejsUtils"),m=e("./nodejs/NodejsStreamInputAdapter"),_=function(e){"/"===e.slice(-1)&&(e=e.substring(0,e.length-1));var t=e.lastIndexOf("/");return 0<t?e.substring(0,t):""},g=function(e){return"/"!==e.slice(-1)&&(e+="/"),e},b=function(e,t){return t=void 0!==t?t:f.createFolders,e=g(e),this.files[e]||s.call(this,e,null,{dir:!0,createFolders:t}),this.files[e]};function h(e){return"[object RegExp]"===Object.prototype.toString.call(e)}var n={load:function(){throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.")},forEach:function(e){var t,r,n;for(t in this.files)n=this.files[t],(r=t.slice(this.root.length,t.length))&&t.slice(0,this.root.length)===this.root&&e(r,n)},filter:function(r){var n=[];return this.forEach(function(e,t){r(e,t)&&n.push(t)}),n},file:function(e,t,r){if(1!==arguments.length)return e=this.root+e,s.call(this,e,t,r),this;if(h(e)){var n=e;return this.filter(function(e,t){return!t.dir&&n.test(e)})}var i=this.files[this.root+e];return i&&!i.dir?i:null},folder:function(r){if(!r)return this;if(h(r))return this.filter(function(e,t){return t.dir&&r.test(e)});var e=this.root+r,t=b.call(this,e),n=this.clone();return n.root=t.name,n},remove:function(r){r=this.root+r;var e=this.files[r];if(e||("/"!==r.slice(-1)&&(r+="/"),e=this.files[r]),e&&!e.dir)delete this.files[r];else for(var t=this.filter(function(e,t){return t.name.slice(0,r.length)===r}),n=0;n<t.length;n++)delete this.files[t[n].name];return this},generate:function(){throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.")},generateInternalStream:function(e){var t,r={};try{if((r=u.extend(e||{},{streamFiles:!1,compression:"STORE",compressionOptions:null,type:"",platform:"DOS",comment:null,mimeType:"application/zip",encodeFileName:i.utf8encode})).type=r.type.toLowerCase(),r.compression=r.compression.toUpperCase(),"binarystring"===r.type&&(r.type="string"),!r.type)throw new Error("No output type specified.");u.checkSupport(r.type),"darwin"!==r.platform&&"freebsd"!==r.platform&&"linux"!==r.platform&&"sunos"!==r.platform||(r.platform="UNIX"),"win32"===r.platform&&(r.platform="DOS");var n=r.comment||this.comment||"";t=o.generateWorker(this,r,n)}catch(e){(t=new l("error")).error(e)}return new a(t,r.type||"string",r.mimeType)},generateAsync:function(e,t){return this.generateInternalStream(e).accumulate(t)},generateNodeStream:function(e,t){return(e=e||{}).type||(e.type="nodebuffer"),this.generateInternalStream(e).toNodejsStream(t)}};t.exports=n},{"./compressedObject":2,"./defaults":5,"./generate":9,"./nodejs/NodejsStreamInputAdapter":12,"./nodejsUtils":14,"./stream/GenericWorker":28,"./stream/StreamHelper":29,"./utf8":31,"./utils":32,"./zipObject":35}],16:[function(e,t,r){"use strict";t.exports=e("stream")},{stream:void 0}],17:[function(e,t,r){"use strict";var n=e("./DataReader");function i(e){n.call(this,e);for(var t=0;t<this.data.length;t++)e[t]=255&e[t]}e("../utils").inherits(i,n),i.prototype.byteAt=function(e){return this.data[this.zero+e]},i.prototype.lastIndexOfSignature=function(e){for(var t=e.charCodeAt(0),r=e.charCodeAt(1),n=e.charCodeAt(2),i=e.charCodeAt(3),s=this.length-4;0<=s;--s)if(this.data[s]===t&&this.data[s+1]===r&&this.data[s+2]===n&&this.data[s+3]===i)return s-this.zero;return-1},i.prototype.readAndCheckSignature=function(e){var t=e.charCodeAt(0),r=e.charCodeAt(1),n=e.charCodeAt(2),i=e.charCodeAt(3),s=this.readData(4);return t===s[0]&&r===s[1]&&n===s[2]&&i===s[3]},i.prototype.readData=function(e){if(this.checkOffset(e),0===e)return[];var t=this.data.slice(this.zero+this.index,this.zero+this.index+e);return this.index+=e,t},t.exports=i},{"../utils":32,"./DataReader":18}],18:[function(e,t,r){"use strict";var n=e("../utils");function i(e){this.data=e,this.length=e.length,this.index=0,this.zero=0}i.prototype={checkOffset:function(e){this.checkIndex(this.index+e)},checkIndex:function(e){if(this.length<this.zero+e||e<0)throw new Error("End of data reached (data length = "+this.length+", asked index = "+e+"). Corrupted zip ?")},setIndex:function(e){this.checkIndex(e),this.index=e},skip:function(e){this.setIndex(this.index+e)},byteAt:function(){},readInt:function(e){var t,r=0;for(this.checkOffset(e),t=this.index+e-1;t>=this.index;t--)r=(r<<8)+this.byteAt(t);return this.index+=e,r},readString:function(e){return n.transformTo("string",this.readData(e))},readData:function(){},lastIndexOfSignature:function(){},readAndCheckSignature:function(){},readDate:function(){var e=this.readInt(4);return new Date(Date.UTC(1980+(e>>25&127),(e>>21&15)-1,e>>16&31,e>>11&31,e>>5&63,(31&e)<<1))}},t.exports=i},{"../utils":32}],19:[function(e,t,r){"use strict";var n=e("./Uint8ArrayReader");function i(e){n.call(this,e)}e("../utils").inherits(i,n),i.prototype.readData=function(e){this.checkOffset(e);var t=this.data.slice(this.zero+this.index,this.zero+this.index+e);return this.index+=e,t},t.exports=i},{"../utils":32,"./Uint8ArrayReader":21}],20:[function(e,t,r){"use strict";var n=e("./DataReader");function i(e){n.call(this,e)}e("../utils").inherits(i,n),i.prototype.byteAt=function(e){return this.data.charCodeAt(this.zero+e)},i.prototype.lastIndexOfSignature=function(e){return this.data.lastIndexOf(e)-this.zero},i.prototype.readAndCheckSignature=function(e){return e===this.readData(4)},i.prototype.readData=function(e){this.checkOffset(e);var t=this.data.slice(this.zero+this.index,this.zero+this.index+e);return this.index+=e,t},t.exports=i},{"../utils":32,"./DataReader":18}],21:[function(e,t,r){"use strict";var n=e("./ArrayReader");function i(e){n.call(this,e)}e("../utils").inherits(i,n),i.prototype.readData=function(e){if(this.checkOffset(e),0===e)return new Uint8Array(0);var t=this.data.subarray(this.zero+this.index,this.zero+this.index+e);return this.index+=e,t},t.exports=i},{"../utils":32,"./ArrayReader":17}],22:[function(e,t,r){"use strict";var n=e("../utils"),i=e("../support"),s=e("./ArrayReader"),a=e("./StringReader"),o=e("./NodeBufferReader"),h=e("./Uint8ArrayReader");t.exports=function(e){var t=n.getTypeOf(e);return n.checkSupport(t),"string"!==t||i.uint8array?"nodebuffer"===t?new o(e):i.uint8array?new h(n.transformTo("uint8array",e)):new s(n.transformTo("array",e)):new a(e)}},{"../support":30,"../utils":32,"./ArrayReader":17,"./NodeBufferReader":19,"./StringReader":20,"./Uint8ArrayReader":21}],23:[function(e,t,r){"use strict";r.LOCAL_FILE_HEADER="PK",r.CENTRAL_FILE_HEADER="PK",r.CENTRAL_DIRECTORY_END="PK",r.ZIP64_CENTRAL_DIRECTORY_LOCATOR="PK",r.ZIP64_CENTRAL_DIRECTORY_END="PK",r.DATA_DESCRIPTOR="PK\b"},{}],24:[function(e,t,r){"use strict";var n=e("./GenericWorker"),i=e("../utils");function s(e){n.call(this,"ConvertWorker to "+e),this.destType=e}i.inherits(s,n),s.prototype.processChunk=function(e){this.push({data:i.transformTo(this.destType,e.data),meta:e.meta})},t.exports=s},{"../utils":32,"./GenericWorker":28}],25:[function(e,t,r){"use strict";var n=e("./GenericWorker"),i=e("../crc32");function s(){n.call(this,"Crc32Probe"),this.withStreamInfo("crc32",0)}e("../utils").inherits(s,n),s.prototype.processChunk=function(e){this.streamInfo.crc32=i(e.data,this.streamInfo.crc32||0),this.push(e)},t.exports=s},{"../crc32":4,"../utils":32,"./GenericWorker":28}],26:[function(e,t,r){"use strict";var n=e("../utils"),i=e("./GenericWorker");function s(e){i.call(this,"DataLengthProbe for "+e),this.propName=e,this.withStreamInfo(e,0)}n.inherits(s,i),s.prototype.processChunk=function(e){if(e){var t=this.streamInfo[this.propName]||0;this.streamInfo[this.propName]=t+e.data.length}i.prototype.processChunk.call(this,e)},t.exports=s},{"../utils":32,"./GenericWorker":28}],27:[function(e,t,r){"use strict";var n=e("../utils"),i=e("./GenericWorker");function s(e){i.call(this,"DataWorker");var t=this;this.dataIsReady=!1,this.index=0,this.max=0,this.data=null,this.type="",this._tickScheduled=!1,e.then(function(e){t.dataIsReady=!0,t.data=e,t.max=e&&e.length||0,t.type=n.getTypeOf(e),t.isPaused||t._tickAndRepeat()},function(e){t.error(e)})}n.inherits(s,i),s.prototype.cleanUp=function(){i.prototype.cleanUp.call(this),this.data=null},s.prototype.resume=function(){return!!i.prototype.resume.call(this)&&(!this._tickScheduled&&this.dataIsReady&&(this._tickScheduled=!0,n.delay(this._tickAndRepeat,[],this)),!0)},s.prototype._tickAndRepeat=function(){this._tickScheduled=!1,this.isPaused||this.isFinished||(this._tick(),this.isFinished||(n.delay(this._tickAndRepeat,[],this),this._tickScheduled=!0))},s.prototype._tick=function(){if(this.isPaused||this.isFinished)return!1;var e=null,t=Math.min(this.max,this.index+16384);if(this.index>=this.max)return this.end();switch(this.type){case"string":e=this.data.substring(this.index,t);break;case"uint8array":e=this.data.subarray(this.index,t);break;case"array":case"nodebuffer":e=this.data.slice(this.index,t)}return this.index=t,this.push({data:e,meta:{percent:this.max?this.index/this.max*100:0}})},t.exports=s},{"../utils":32,"./GenericWorker":28}],28:[function(e,t,r){"use strict";function n(e){this.name=e||"default",this.streamInfo={},this.generatedError=null,this.extraStreamInfo={},this.isPaused=!0,this.isFinished=!1,this.isLocked=!1,this._listeners={data:[],end:[],error:[]},this.previous=null}n.prototype={push:function(e){this.emit("data",e)},end:function(){if(this.isFinished)return!1;this.flush();try{this.emit("end"),this.cleanUp(),this.isFinished=!0}catch(e){this.emit("error",e)}return!0},error:function(e){return!this.isFinished&&(this.isPaused?this.generatedError=e:(this.isFinished=!0,this.emit("error",e),this.previous&&this.previous.error(e),this.cleanUp()),!0)},on:function(e,t){return this._listeners[e].push(t),this},cleanUp:function(){this.streamInfo=this.generatedError=this.extraStreamInfo=null,this._listeners=[]},emit:function(e,t){if(this._listeners[e])for(var r=0;r<this._listeners[e].length;r++)this._listeners[e][r].call(this,t)},pipe:function(e){return e.registerPrevious(this)},registerPrevious:function(e){if(this.isLocked)throw new Error("The stream '"+this+"' has already been used.");this.streamInfo=e.streamInfo,this.mergeStreamInfo(),this.previous=e;var t=this;return e.on("data",function(e){t.processChunk(e)}),e.on("end",function(){t.end()}),e.on("error",function(e){t.error(e)}),this},pause:function(){return!this.isPaused&&!this.isFinished&&(this.isPaused=!0,this.previous&&this.previous.pause(),!0)},resume:function(){if(!this.isPaused||this.isFinished)return!1;var e=this.isPaused=!1;return this.generatedError&&(this.error(this.generatedError),e=!0),this.previous&&this.previous.resume(),!e},flush:function(){},processChunk:function(e){this.push(e)},withStreamInfo:function(e,t){return this.extraStreamInfo[e]=t,this.mergeStreamInfo(),this},mergeStreamInfo:function(){for(var e in this.extraStreamInfo)Object.prototype.hasOwnProperty.call(this.extraStreamInfo,e)&&(this.streamInfo[e]=this.extraStreamInfo[e])},lock:function(){if(this.isLocked)throw new Error("The stream '"+this+"' has already been used.");this.isLocked=!0,this.previous&&this.previous.lock()},toString:function(){var e="Worker "+this.name;return this.previous?this.previous+" -> "+e:e}},t.exports=n},{}],29:[function(e,t,r){"use strict";var h=e("../utils"),i=e("./ConvertWorker"),s=e("./GenericWorker"),u=e("../base64"),n=e("../support"),a=e("../external"),o=null;if(n.nodestream)try{o=e("../nodejs/NodejsStreamOutputAdapter")}catch(e){}function l(e,o){return new a.Promise(function(t,r){var n=[],i=e._internalType,s=e._outputType,a=e._mimeType;e.on("data",function(e,t){n.push(e),o&&o(t)}).on("error",function(e){n=[],r(e)}).on("end",function(){try{var e=function(e,t,r){switch(e){case"blob":return h.newBlob(h.transformTo("arraybuffer",t),r);case"base64":return u.encode(t);default:return h.transformTo(e,t)}}(s,function(e,t){var r,n=0,i=null,s=0;for(r=0;r<t.length;r++)s+=t[r].length;switch(e){case"string":return t.join("");case"array":return Array.prototype.concat.apply([],t);case"uint8array":for(i=new Uint8Array(s),r=0;r<t.length;r++)i.set(t[r],n),n+=t[r].length;return i;case"nodebuffer":return Buffer.concat(t);default:throw new Error("concat : unsupported type '"+e+"'")}}(i,n),a);t(e)}catch(e){r(e)}n=[]}).resume()})}function f(e,t,r){var n=t;switch(t){case"blob":case"arraybuffer":n="uint8array";break;case"base64":n="string"}try{this._internalType=n,this._outputType=t,this._mimeType=r,h.checkSupport(n),this._worker=e.pipe(new i(n)),e.lock()}catch(e){this._worker=new s("error"),this._worker.error(e)}}f.prototype={accumulate:function(e){return l(this,e)},on:function(e,t){var r=this;return"data"===e?this._worker.on(e,function(e){t.call(r,e.data,e.meta)}):this._worker.on(e,function(){h.delay(t,arguments,r)}),this},resume:function(){return h.delay(this._worker.resume,[],this._worker),this},pause:function(){return this._worker.pause(),this},toNodejsStream:function(e){if(h.checkSupport("nodestream"),"nodebuffer"!==this._outputType)throw new Error(this._outputType+" is not supported by this method");return new o(this,{objectMode:"nodebuffer"!==this._outputType},e)}},t.exports=f},{"../base64":1,"../external":6,"../nodejs/NodejsStreamOutputAdapter":13,"../support":30,"../utils":32,"./ConvertWorker":24,"./GenericWorker":28}],30:[function(e,t,r){"use strict";if(r.base64=!0,r.array=!0,r.string=!0,r.arraybuffer="undefined"!=typeof ArrayBuffer&&"undefined"!=typeof Uint8Array,r.nodebuffer="undefined"!=typeof Buffer,r.uint8array="undefined"!=typeof Uint8Array,"undefined"==typeof ArrayBuffer)r.blob=!1;else{var n=new ArrayBuffer(0);try{r.blob=0===new Blob([n],{type:"application/zip"}).size}catch(e){try{var i=new(self.BlobBuilder||self.WebKitBlobBuilder||self.MozBlobBuilder||self.MSBlobBuilder);i.append(n),r.blob=0===i.getBlob("application/zip").size}catch(e){r.blob=!1}}}try{r.nodestream=!!e("readable-stream").Readable}catch(e){r.nodestream=!1}},{"readable-stream":16}],31:[function(e,t,s){"use strict";for(var o=e("./utils"),h=e("./support"),r=e("./nodejsUtils"),n=e("./stream/GenericWorker"),u=new Array(256),i=0;i<256;i++)u[i]=252<=i?6:248<=i?5:240<=i?4:224<=i?3:192<=i?2:1;u[254]=u[254]=1;function a(){n.call(this,"utf-8 decode"),this.leftOver=null}function l(){n.call(this,"utf-8 encode")}s.utf8encode=function(e){return h.nodebuffer?r.newBufferFrom(e,"utf-8"):function(e){var t,r,n,i,s,a=e.length,o=0;for(i=0;i<a;i++)55296==(64512&(r=e.charCodeAt(i)))&&i+1<a&&56320==(64512&(n=e.charCodeAt(i+1)))&&(r=65536+(r-55296<<10)+(n-56320),i++),o+=r<128?1:r<2048?2:r<65536?3:4;for(t=h.uint8array?new Uint8Array(o):new Array(o),i=s=0;s<o;i++)55296==(64512&(r=e.charCodeAt(i)))&&i+1<a&&56320==(64512&(n=e.charCodeAt(i+1)))&&(r=65536+(r-55296<<10)+(n-56320),i++),r<128?t[s++]=r:(r<2048?t[s++]=192|r>>>6:(r<65536?t[s++]=224|r>>>12:(t[s++]=240|r>>>18,t[s++]=128|r>>>12&63),t[s++]=128|r>>>6&63),t[s++]=128|63&r);return t}(e)},s.utf8decode=function(e){return h.nodebuffer?o.transformTo("nodebuffer",e).toString("utf-8"):function(e){var t,r,n,i,s=e.length,a=new Array(2*s);for(t=r=0;t<s;)if((n=e[t++])<128)a[r++]=n;else if(4<(i=u[n]))a[r++]=65533,t+=i-1;else{for(n&=2===i?31:3===i?15:7;1<i&&t<s;)n=n<<6|63&e[t++],i--;1<i?a[r++]=65533:n<65536?a[r++]=n:(n-=65536,a[r++]=55296|n>>10&1023,a[r++]=56320|1023&n)}return a.length!==r&&(a.subarray?a=a.subarray(0,r):a.length=r),o.applyFromCharCode(a)}(e=o.transformTo(h.uint8array?"uint8array":"array",e))},o.inherits(a,n),a.prototype.processChunk=function(e){var t=o.transformTo(h.uint8array?"uint8array":"array",e.data);if(this.leftOver&&this.leftOver.length){if(h.uint8array){var r=t;(t=new Uint8Array(r.length+this.leftOver.length)).set(this.leftOver,0),t.set(r,this.leftOver.length)}else t=this.leftOver.concat(t);this.leftOver=null}var n=function(e,t){var r;for((t=t||e.length)>e.length&&(t=e.length),r=t-1;0<=r&&128==(192&e[r]);)r--;return r<0?t:0===r?t:r+u[e[r]]>t?r:t}(t),i=t;n!==t.length&&(h.uint8array?(i=t.subarray(0,n),this.leftOver=t.subarray(n,t.length)):(i=t.slice(0,n),this.leftOver=t.slice(n,t.length))),this.push({data:s.utf8decode(i),meta:e.meta})},a.prototype.flush=function(){this.leftOver&&this.leftOver.length&&(this.push({data:s.utf8decode(this.leftOver),meta:{}}),this.leftOver=null)},s.Utf8DecodeWorker=a,o.inherits(l,n),l.prototype.processChunk=function(e){this.push({data:s.utf8encode(e.data),meta:e.meta})},s.Utf8EncodeWorker=l},{"./nodejsUtils":14,"./stream/GenericWorker":28,"./support":30,"./utils":32}],32:[function(e,t,a){"use strict";var o=e("./support"),h=e("./base64"),r=e("./nodejsUtils"),u=e("./external");function n(e){return e}function l(e,t){for(var r=0;r<e.length;++r)t[r]=255&e.charCodeAt(r);return t}e("setimmediate"),a.newBlob=function(t,r){a.checkSupport("blob");try{return new Blob([t],{type:r})}catch(e){try{var n=new(self.BlobBuilder||self.WebKitBlobBuilder||self.MozBlobBuilder||self.MSBlobBuilder);return n.append(t),n.getBlob(r)}catch(e){throw new Error("Bug : can't construct the Blob.")}}};var i={stringifyByChunk:function(e,t,r){var n=[],i=0,s=e.length;if(s<=r)return String.fromCharCode.apply(null,e);for(;i<s;)"array"===t||"nodebuffer"===t?n.push(String.fromCharCode.apply(null,e.slice(i,Math.min(i+r,s)))):n.push(String.fromCharCode.apply(null,e.subarray(i,Math.min(i+r,s)))),i+=r;return n.join("")},stringifyByChar:function(e){for(var t="",r=0;r<e.length;r++)t+=String.fromCharCode(e[r]);return t},applyCanBeUsed:{uint8array:function(){try{return o.uint8array&&1===String.fromCharCode.apply(null,new Uint8Array(1)).length}catch(e){return!1}}(),nodebuffer:function(){try{return o.nodebuffer&&1===String.fromCharCode.apply(null,r.allocBuffer(1)).length}catch(e){return!1}}()}};function s(e){var t=65536,r=a.getTypeOf(e),n=!0;if("uint8array"===r?n=i.applyCanBeUsed.uint8array:"nodebuffer"===r&&(n=i.applyCanBeUsed.nodebuffer),n)for(;1<t;)try{return i.stringifyByChunk(e,r,t)}catch(e){t=Math.floor(t/2)}return i.stringifyByChar(e)}function f(e,t){for(var r=0;r<e.length;r++)t[r]=e[r];return t}a.applyFromCharCode=s;var c={};c.string={string:n,array:function(e){return l(e,new Array(e.length))},arraybuffer:function(e){return c.string.uint8array(e).buffer},uint8array:function(e){return l(e,new Uint8Array(e.length))},nodebuffer:function(e){return l(e,r.allocBuffer(e.length))}},c.array={string:s,array:n,arraybuffer:function(e){return new Uint8Array(e).buffer},uint8array:function(e){return new Uint8Array(e)},nodebuffer:function(e){return r.newBufferFrom(e)}},c.arraybuffer={string:function(e){return s(new Uint8Array(e))},array:function(e){return f(new Uint8Array(e),new Array(e.byteLength))},arraybuffer:n,uint8array:function(e){return new Uint8Array(e)},nodebuffer:function(e){return r.newBufferFrom(new Uint8Array(e))}},c.uint8array={string:s,array:function(e){return f(e,new Array(e.length))},arraybuffer:function(e){return e.buffer},uint8array:n,nodebuffer:function(e){return r.newBufferFrom(e)}},c.nodebuffer={string:s,array:function(e){return f(e,new Array(e.length))},arraybuffer:function(e){return c.nodebuffer.uint8array(e).buffer},uint8array:function(e){return f(e,new Uint8Array(e.length))},nodebuffer:n},a.transformTo=function(e,t){if(t=t||"",!e)return t;a.checkSupport(e);var r=a.getTypeOf(t);return c[r][e](t)},a.resolve=function(e){for(var t=e.split("/"),r=[],n=0;n<t.length;n++){var i=t[n];"."===i||""===i&&0!==n&&n!==t.length-1||(".."===i?r.pop():r.push(i))}return r.join("/")},a.getTypeOf=function(e){return"string"==typeof e?"string":"[object Array]"===Object.prototype.toString.call(e)?"array":o.nodebuffer&&r.isBuffer(e)?"nodebuffer":o.uint8array&&e instanceof Uint8Array?"uint8array":o.arraybuffer&&e instanceof ArrayBuffer?"arraybuffer":void 0},a.checkSupport=function(e){if(!o[e.toLowerCase()])throw new Error(e+" is not supported by this platform")},a.MAX_VALUE_16BITS=65535,a.MAX_VALUE_32BITS=-1,a.pretty=function(e){var t,r,n="";for(r=0;r<(e||"").length;r++)n+="\\x"+((t=e.charCodeAt(r))<16?"0":"")+t.toString(16).toUpperCase();return n},a.delay=function(e,t,r){setImmediate(function(){e.apply(r||null,t||[])})},a.inherits=function(e,t){function r(){}r.prototype=t.prototype,e.prototype=new r},a.extend=function(){var e,t,r={};for(e=0;e<arguments.length;e++)for(t in arguments[e])Object.prototype.hasOwnProperty.call(arguments[e],t)&&void 0===r[t]&&(r[t]=arguments[e][t]);return r},a.prepareContent=function(r,e,n,i,s){return u.Promise.resolve(e).then(function(n){return o.blob&&(n instanceof Blob||-1!==["[object File]","[object Blob]"].indexOf(Object.prototype.toString.call(n)))&&"undefined"!=typeof FileReader?new u.Promise(function(t,r){var e=new FileReader;e.onload=function(e){t(e.target.result)},e.onerror=function(e){r(e.target.error)},e.readAsArrayBuffer(n)}):n}).then(function(e){var t=a.getTypeOf(e);return t?("arraybuffer"===t?e=a.transformTo("uint8array",e):"string"===t&&(s?e=h.decode(e):n&&!0!==i&&(e=function(e){return l(e,o.uint8array?new Uint8Array(e.length):new Array(e.length))}(e))),e):u.Promise.reject(new Error("Can't read the data of '"+r+"'. Is it in a supported JavaScript type (String, Blob, ArrayBuffer, etc) ?"))})}},{"./base64":1,"./external":6,"./nodejsUtils":14,"./support":30,setimmediate:54}],33:[function(e,t,r){"use strict";var n=e("./reader/readerFor"),i=e("./utils"),s=e("./signature"),a=e("./zipEntry"),o=e("./support");function h(e){this.files=[],this.loadOptions=e}h.prototype={checkSignature:function(e){if(!this.reader.readAndCheckSignature(e)){this.reader.index-=4;var t=this.reader.readString(4);throw new Error("Corrupted zip or bug: unexpected signature ("+i.pretty(t)+", expected "+i.pretty(e)+")")}},isSignature:function(e,t){var r=this.reader.index;this.reader.setIndex(e);var n=this.reader.readString(4)===t;return this.reader.setIndex(r),n},readBlockEndOfCentral:function(){this.diskNumber=this.reader.readInt(2),this.diskWithCentralDirStart=this.reader.readInt(2),this.centralDirRecordsOnThisDisk=this.reader.readInt(2),this.centralDirRecords=this.reader.readInt(2),this.centralDirSize=this.reader.readInt(4),this.centralDirOffset=this.reader.readInt(4),this.zipCommentLength=this.reader.readInt(2);var e=this.reader.readData(this.zipCommentLength),t=o.uint8array?"uint8array":"array",r=i.transformTo(t,e);this.zipComment=this.loadOptions.decodeFileName(r)},readBlockZip64EndOfCentral:function(){this.zip64EndOfCentralSize=this.reader.readInt(8),this.reader.skip(4),this.diskNumber=this.reader.readInt(4),this.diskWithCentralDirStart=this.reader.readInt(4),this.centralDirRecordsOnThisDisk=this.reader.readInt(8),this.centralDirRecords=this.reader.readInt(8),this.centralDirSize=this.reader.readInt(8),this.centralDirOffset=this.reader.readInt(8),this.zip64ExtensibleData={};for(var e,t,r,n=this.zip64EndOfCentralSize-44;0<n;)e=this.reader.readInt(2),t=this.reader.readInt(4),r=this.reader.readData(t),this.zip64ExtensibleData[e]={id:e,length:t,value:r}},readBlockZip64EndOfCentralLocator:function(){if(this.diskWithZip64CentralDirStart=this.reader.readInt(4),this.relativeOffsetEndOfZip64CentralDir=this.reader.readInt(8),this.disksCount=this.reader.readInt(4),1<this.disksCount)throw new Error("Multi-volumes zip are not supported")},readLocalFiles:function(){var e,t;for(e=0;e<this.files.length;e++)t=this.files[e],this.reader.setIndex(t.localHeaderOffset),this.checkSignature(s.LOCAL_FILE_HEADER),t.readLocalPart(this.reader),t.handleUTF8(),t.processAttributes()},readCentralDir:function(){var e;for(this.reader.setIndex(this.centralDirOffset);this.reader.readAndCheckSignature(s.CENTRAL_FILE_HEADER);)(e=new a({zip64:this.zip64},this.loadOptions)).readCentralPart(this.reader),this.files.push(e);if(this.centralDirRecords!==this.files.length&&0!==this.centralDirRecords&&0===this.files.length)throw new Error("Corrupted zip or bug: expected "+this.centralDirRecords+" records in central dir, got "+this.files.length)},readEndOfCentral:function(){var e=this.reader.lastIndexOfSignature(s.CENTRAL_DIRECTORY_END);if(e<0)throw!this.isSignature(0,s.LOCAL_FILE_HEADER)?new Error("Can't find end of central directory : is this a zip file ? If it is, see https://stuk.github.io/jszip/documentation/howto/read_zip.html"):new Error("Corrupted zip: can't find end of central directory");this.reader.setIndex(e);var t=e;if(this.checkSignature(s.CENTRAL_DIRECTORY_END),this.readBlockEndOfCentral(),this.diskNumber===i.MAX_VALUE_16BITS||this.diskWithCentralDirStart===i.MAX_VALUE_16BITS||this.centralDirRecordsOnThisDisk===i.MAX_VALUE_16BITS||this.centralDirRecords===i.MAX_VALUE_16BITS||this.centralDirSize===i.MAX_VALUE_32BITS||this.centralDirOffset===i.MAX_VALUE_32BITS){if(this.zip64=!0,(e=this.reader.lastIndexOfSignature(s.ZIP64_CENTRAL_DIRECTORY_LOCATOR))<0)throw new Error("Corrupted zip: can't find the ZIP64 end of central directory locator");if(this.reader.setIndex(e),this.checkSignature(s.ZIP64_CENTRAL_DIRECTORY_LOCATOR),this.readBlockZip64EndOfCentralLocator(),!this.isSignature(this.relativeOffsetEndOfZip64CentralDir,s.ZIP64_CENTRAL_DIRECTORY_END)&&(this.relativeOffsetEndOfZip64CentralDir=this.reader.lastIndexOfSignature(s.ZIP64_CENTRAL_DIRECTORY_END),this.relativeOffsetEndOfZip64CentralDir<0))throw new Error("Corrupted zip: can't find the ZIP64 end of central directory");this.reader.setIndex(this.relativeOffsetEndOfZip64CentralDir),this.checkSignature(s.ZIP64_CENTRAL_DIRECTORY_END),this.readBlockZip64EndOfCentral()}var r=this.centralDirOffset+this.centralDirSize;this.zip64&&(r+=20,r+=12+this.zip64EndOfCentralSize);var n=t-r;if(0<n)this.isSignature(t,s.CENTRAL_FILE_HEADER)||(this.reader.zero=n);else if(n<0)throw new Error("Corrupted zip: missing "+Math.abs(n)+" bytes.")},prepareReader:function(e){this.reader=n(e)},load:function(e){this.prepareReader(e),this.readEndOfCentral(),this.readCentralDir(),this.readLocalFiles()}},t.exports=h},{"./reader/readerFor":22,"./signature":23,"./support":30,"./utils":32,"./zipEntry":34}],34:[function(e,t,r){"use strict";var n=e("./reader/readerFor"),s=e("./utils"),i=e("./compressedObject"),a=e("./crc32"),o=e("./utf8"),h=e("./compressions"),u=e("./support");function l(e,t){this.options=e,this.loadOptions=t}l.prototype={isEncrypted:function(){return 1==(1&this.bitFlag)},useUTF8:function(){return 2048==(2048&this.bitFlag)},readLocalPart:function(e){var t,r;if(e.skip(22),this.fileNameLength=e.readInt(2),r=e.readInt(2),this.fileName=e.readData(this.fileNameLength),e.skip(r),-1===this.compressedSize||-1===this.uncompressedSize)throw new Error("Bug or corrupted zip : didn't get enough information from the central directory (compressedSize === -1 || uncompressedSize === -1)");if(null===(t=function(e){for(var t in h)if(Object.prototype.hasOwnProperty.call(h,t)&&h[t].magic===e)return h[t];return null}(this.compressionMethod)))throw new Error("Corrupted zip : compression "+s.pretty(this.compressionMethod)+" unknown (inner file : "+s.transformTo("string",this.fileName)+")");this.decompressed=new i(this.compressedSize,this.uncompressedSize,this.crc32,t,e.readData(this.compressedSize))},readCentralPart:function(e){this.versionMadeBy=e.readInt(2),e.skip(2),this.bitFlag=e.readInt(2),this.compressionMethod=e.readString(2),this.date=e.readDate(),this.crc32=e.readInt(4),this.compressedSize=e.readInt(4),this.uncompressedSize=e.readInt(4);var t=e.readInt(2);if(this.extraFieldsLength=e.readInt(2),this.fileCommentLength=e.readInt(2),this.diskNumberStart=e.readInt(2),this.internalFileAttributes=e.readInt(2),this.externalFileAttributes=e.readInt(4),this.localHeaderOffset=e.readInt(4),this.isEncrypted())throw new Error("Encrypted zip are not supported");e.skip(t),this.readExtraFields(e),this.parseZIP64ExtraField(e),this.fileComment=e.readData(this.fileCommentLength)},processAttributes:function(){this.unixPermissions=null,this.dosPermissions=null;var e=this.versionMadeBy>>8;this.dir=!!(16&this.externalFileAttributes),0==e&&(this.dosPermissions=63&this.externalFileAttributes),3==e&&(this.unixPermissions=this.externalFileAttributes>>16&65535),this.dir||"/"!==this.fileNameStr.slice(-1)||(this.dir=!0)},parseZIP64ExtraField:function(){if(this.extraFields[1]){var e=n(this.extraFields[1].value);this.uncompressedSize===s.MAX_VALUE_32BITS&&(this.uncompressedSize=e.readInt(8)),this.compressedSize===s.MAX_VALUE_32BITS&&(this.compressedSize=e.readInt(8)),this.localHeaderOffset===s.MAX_VALUE_32BITS&&(this.localHeaderOffset=e.readInt(8)),this.diskNumberStart===s.MAX_VALUE_32BITS&&(this.diskNumberStart=e.readInt(4))}},readExtraFields:function(e){var t,r,n,i=e.index+this.extraFieldsLength;for(this.extraFields||(this.extraFields={});e.index+4<i;)t=e.readInt(2),r=e.readInt(2),n=e.readData(r),this.extraFields[t]={id:t,length:r,value:n};e.setIndex(i)},handleUTF8:function(){var e=u.uint8array?"uint8array":"array";if(this.useUTF8())this.fileNameStr=o.utf8decode(this.fileName),this.fileCommentStr=o.utf8decode(this.fileComment);else{var t=this.findExtraFieldUnicodePath();if(null!==t)this.fileNameStr=t;else{var r=s.transformTo(e,this.fileName);this.fileNameStr=this.loadOptions.decodeFileName(r)}var n=this.findExtraFieldUnicodeComment();if(null!==n)this.fileCommentStr=n;else{var i=s.transformTo(e,this.fileComment);this.fileCommentStr=this.loadOptions.decodeFileName(i)}}},findExtraFieldUnicodePath:function(){var e=this.extraFields[28789];if(e){var t=n(e.value);return 1!==t.readInt(1)?null:a(this.fileName)!==t.readInt(4)?null:o.utf8decode(t.readData(e.length-5))}return null},findExtraFieldUnicodeComment:function(){var e=this.extraFields[25461];if(e){var t=n(e.value);return 1!==t.readInt(1)?null:a(this.fileComment)!==t.readInt(4)?null:o.utf8decode(t.readData(e.length-5))}return null}},t.exports=l},{"./compressedObject":2,"./compressions":3,"./crc32":4,"./reader/readerFor":22,"./support":30,"./utf8":31,"./utils":32}],35:[function(e,t,r){"use strict";function n(e,t,r){this.name=e,this.dir=r.dir,this.date=r.date,this.comment=r.comment,this.unixPermissions=r.unixPermissions,this.dosPermissions=r.dosPermissions,this._data=t,this._dataBinary=r.binary,this.options={compression:r.compression,compressionOptions:r.compressionOptions}}var s=e("./stream/StreamHelper"),i=e("./stream/DataWorker"),a=e("./utf8"),o=e("./compressedObject"),h=e("./stream/GenericWorker");n.prototype={internalStream:function(e){var t=null,r="string";try{if(!e)throw new Error("No output type specified.");var n="string"===(r=e.toLowerCase())||"text"===r;"binarystring"!==r&&"text"!==r||(r="string"),t=this._decompressWorker();var i=!this._dataBinary;i&&!n&&(t=t.pipe(new a.Utf8EncodeWorker)),!i&&n&&(t=t.pipe(new a.Utf8DecodeWorker))}catch(e){(t=new h("error")).error(e)}return new s(t,r,"")},async:function(e,t){return this.internalStream(e).accumulate(t)},nodeStream:function(e,t){return this.internalStream(e||"nodebuffer").toNodejsStream(t)},_compressWorker:function(e,t){if(this._data instanceof o&&this._data.compression.magic===e.magic)return this._data.getCompressedWorker();var r=this._decompressWorker();return this._dataBinary||(r=r.pipe(new a.Utf8EncodeWorker)),o.createWorkerFrom(r,e,t)},_decompressWorker:function(){return this._data instanceof o?this._data.getContentWorker():this._data instanceof h?this._data:new i(this._data)}};for(var u=["asText","asBinary","asNodeBuffer","asUint8Array","asArrayBuffer"],l=function(){throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.")},f=0;f<u.length;f++)n.prototype[u[f]]=l;t.exports=n},{"./compressedObject":2,"./stream/DataWorker":27,"./stream/GenericWorker":28,"./stream/StreamHelper":29,"./utf8":31}],36:[function(e,l,t){(function(t){"use strict";var r,n,e=t.MutationObserver||t.WebKitMutationObserver;if(e){var i=0,s=new e(u),a=t.document.createTextNode("");s.observe(a,{characterData:!0}),r=function(){a.data=i=++i%2}}else if(t.setImmediate||void 0===t.MessageChannel)r="document"in t&&"onreadystatechange"in t.document.createElement("script")?function(){var e=t.document.createElement("script");e.onreadystatechange=function(){u(),e.onreadystatechange=null,e.parentNode.removeChild(e),e=null},t.document.documentElement.appendChild(e)}:function(){setTimeout(u,0)};else{var o=new t.MessageChannel;o.port1.onmessage=u,r=function(){o.port2.postMessage(0)}}var h=[];function u(){var e,t;n=!0;for(var r=h.length;r;){for(t=h,h=[],e=-1;++e<r;)t[e]();r=h.length}n=!1}l.exports=function(e){1!==h.push(e)||n||r()}}).call(this,"undefined"!=typeof global?global:"undefined"!=typeof self?self:"undefined"!=typeof window?window:{})},{}],37:[function(e,t,r){"use strict";var i=e("immediate");function u(){}var l={},s=["REJECTED"],a=["FULFILLED"],n=["PENDING"];function o(e){if("function"!=typeof e)throw new TypeError("resolver must be a function");this.state=n,this.queue=[],this.outcome=void 0,e!==u&&d(this,e)}function h(e,t,r){this.promise=e,"function"==typeof t&&(this.onFulfilled=t,this.callFulfilled=this.otherCallFulfilled),"function"==typeof r&&(this.onRejected=r,this.callRejected=this.otherCallRejected)}function f(t,r,n){i(function(){var e;try{e=r(n)}catch(e){return l.reject(t,e)}e===t?l.reject(t,new TypeError("Cannot resolve promise with itself")):l.resolve(t,e)})}function c(e){var t=e&&e.then;if(e&&("object"==typeof e||"function"==typeof e)&&"function"==typeof t)return function(){t.apply(e,arguments)}}function d(t,e){var r=!1;function n(e){r||(r=!0,l.reject(t,e))}function i(e){r||(r=!0,l.resolve(t,e))}var s=p(function(){e(i,n)});"error"===s.status&&n(s.value)}function p(e,t){var r={};try{r.value=e(t),r.status="success"}catch(e){r.status="error",r.value=e}return r}(t.exports=o).prototype.finally=function(t){if("function"!=typeof t)return this;var r=this.constructor;return this.then(function(e){return r.resolve(t()).then(function(){return e})},function(e){return r.resolve(t()).then(function(){throw e})})},o.prototype.catch=function(e){return this.then(null,e)},o.prototype.then=function(e,t){if("function"!=typeof e&&this.state===a||"function"!=typeof t&&this.state===s)return this;var r=new this.constructor(u);this.state!==n?f(r,this.state===a?e:t,this.outcome):this.queue.push(new h(r,e,t));return r},h.prototype.callFulfilled=function(e){l.resolve(this.promise,e)},h.prototype.otherCallFulfilled=function(e){f(this.promise,this.onFulfilled,e)},h.prototype.callRejected=function(e){l.reject(this.promise,e)},h.prototype.otherCallRejected=function(e){f(this.promise,this.onRejected,e)},l.resolve=function(e,t){var r=p(c,t);if("error"===r.status)return l.reject(e,r.value);var n=r.value;if(n)d(e,n);else{e.state=a,e.outcome=t;for(var i=-1,s=e.queue.length;++i<s;)e.queue[i].callFulfilled(t)}return e},l.reject=function(e,t){e.state=s,e.outcome=t;for(var r=-1,n=e.queue.length;++r<n;)e.queue[r].callRejected(t);return e},o.resolve=function(e){if(e instanceof this)return e;return l.resolve(new this(u),e)},o.reject=function(e){var t=new this(u);return l.reject(t,e)},o.all=function(e){var r=this;if("[object Array]"!==Object.prototype.toString.call(e))return this.reject(new TypeError("must be an array"));var n=e.length,i=!1;if(!n)return this.resolve([]);var s=new Array(n),a=0,t=-1,o=new this(u);for(;++t<n;)h(e[t],t);return o;function h(e,t){r.resolve(e).then(function(e){s[t]=e,++a!==n||i||(i=!0,l.resolve(o,s))},function(e){i||(i=!0,l.reject(o,e))})}},o.race=function(e){var t=this;if("[object Array]"!==Object.prototype.toString.call(e))return this.reject(new TypeError("must be an array"));var r=e.length,n=!1;if(!r)return this.resolve([]);var i=-1,s=new this(u);for(;++i<r;)a=e[i],t.resolve(a).then(function(e){n||(n=!0,l.resolve(s,e))},function(e){n||(n=!0,l.reject(s,e))});var a;return s}},{immediate:36}],38:[function(e,t,r){"use strict";var n={};(0,e("./lib/utils/common").assign)(n,e("./lib/deflate"),e("./lib/inflate"),e("./lib/zlib/constants")),t.exports=n},{"./lib/deflate":39,"./lib/inflate":40,"./lib/utils/common":41,"./lib/zlib/constants":44}],39:[function(e,t,r){"use strict";var a=e("./zlib/deflate"),o=e("./utils/common"),h=e("./utils/strings"),i=e("./zlib/messages"),s=e("./zlib/zstream"),u=Object.prototype.toString,l=0,f=-1,c=0,d=8;function p(e){if(!(this instanceof p))return new p(e);this.options=o.assign({level:f,method:d,chunkSize:16384,windowBits:15,memLevel:8,strategy:c,to:""},e||{});var t=this.options;t.raw&&0<t.windowBits?t.windowBits=-t.windowBits:t.gzip&&0<t.windowBits&&t.windowBits<16&&(t.windowBits+=16),this.err=0,this.msg="",this.ended=!1,this.chunks=[],this.strm=new s,this.strm.avail_out=0;var r=a.deflateInit2(this.strm,t.level,t.method,t.windowBits,t.memLevel,t.strategy);if(r!==l)throw new Error(i[r]);if(t.header&&a.deflateSetHeader(this.strm,t.header),t.dictionary){var n;if(n="string"==typeof t.dictionary?h.string2buf(t.dictionary):"[object ArrayBuffer]"===u.call(t.dictionary)?new Uint8Array(t.dictionary):t.dictionary,(r=a.deflateSetDictionary(this.strm,n))!==l)throw new Error(i[r]);this._dict_set=!0}}function n(e,t){var r=new p(t);if(r.push(e,!0),r.err)throw r.msg||i[r.err];return r.result}p.prototype.push=function(e,t){var r,n,i=this.strm,s=this.options.chunkSize;if(this.ended)return!1;n=t===~~t?t:!0===t?4:0,"string"==typeof e?i.input=h.string2buf(e):"[object ArrayBuffer]"===u.call(e)?i.input=new Uint8Array(e):i.input=e,i.next_in=0,i.avail_in=i.input.length;do{if(0===i.avail_out&&(i.output=new o.Buf8(s),i.next_out=0,i.avail_out=s),1!==(r=a.deflate(i,n))&&r!==l)return this.onEnd(r),!(this.ended=!0);0!==i.avail_out&&(0!==i.avail_in||4!==n&&2!==n)||("string"===this.options.to?this.onData(h.buf2binstring(o.shrinkBuf(i.output,i.next_out))):this.onData(o.shrinkBuf(i.output,i.next_out)))}while((0<i.avail_in||0===i.avail_out)&&1!==r);return 4===n?(r=a.deflateEnd(this.strm),this.onEnd(r),this.ended=!0,r===l):2!==n||(this.onEnd(l),!(i.avail_out=0))},p.prototype.onData=function(e){this.chunks.push(e)},p.prototype.onEnd=function(e){e===l&&("string"===this.options.to?this.result=this.chunks.join(""):this.result=o.flattenChunks(this.chunks)),this.chunks=[],this.err=e,this.msg=this.strm.msg},r.Deflate=p,r.deflate=n,r.deflateRaw=function(e,t){return(t=t||{}).raw=!0,n(e,t)},r.gzip=function(e,t){return(t=t||{}).gzip=!0,n(e,t)}},{"./utils/common":41,"./utils/strings":42,"./zlib/deflate":46,"./zlib/messages":51,"./zlib/zstream":53}],40:[function(e,t,r){"use strict";var c=e("./zlib/inflate"),d=e("./utils/common"),p=e("./utils/strings"),m=e("./zlib/constants"),n=e("./zlib/messages"),i=e("./zlib/zstream"),s=e("./zlib/gzheader"),_=Object.prototype.toString;function a(e){if(!(this instanceof a))return new a(e);this.options=d.assign({chunkSize:16384,windowBits:0,to:""},e||{});var t=this.options;t.raw&&0<=t.windowBits&&t.windowBits<16&&(t.windowBits=-t.windowBits,0===t.windowBits&&(t.windowBits=-15)),!(0<=t.windowBits&&t.windowBits<16)||e&&e.windowBits||(t.windowBits+=32),15<t.windowBits&&t.windowBits<48&&0==(15&t.windowBits)&&(t.windowBits|=15),this.err=0,this.msg="",this.ended=!1,this.chunks=[],this.strm=new i,this.strm.avail_out=0;var r=c.inflateInit2(this.strm,t.windowBits);if(r!==m.Z_OK)throw new Error(n[r]);this.header=new s,c.inflateGetHeader(this.strm,this.header)}function o(e,t){var r=new a(t);if(r.push(e,!0),r.err)throw r.msg||n[r.err];return r.result}a.prototype.push=function(e,t){var r,n,i,s,a,o,h=this.strm,u=this.options.chunkSize,l=this.options.dictionary,f=!1;if(this.ended)return!1;n=t===~~t?t:!0===t?m.Z_FINISH:m.Z_NO_FLUSH,"string"==typeof e?h.input=p.binstring2buf(e):"[object ArrayBuffer]"===_.call(e)?h.input=new Uint8Array(e):h.input=e,h.next_in=0,h.avail_in=h.input.length;do{if(0===h.avail_out&&(h.output=new d.Buf8(u),h.next_out=0,h.avail_out=u),(r=c.inflate(h,m.Z_NO_FLUSH))===m.Z_NEED_DICT&&l&&(o="string"==typeof l?p.string2buf(l):"[object ArrayBuffer]"===_.call(l)?new Uint8Array(l):l,r=c.inflateSetDictionary(this.strm,o)),r===m.Z_BUF_ERROR&&!0===f&&(r=m.Z_OK,f=!1),r!==m.Z_STREAM_END&&r!==m.Z_OK)return this.onEnd(r),!(this.ended=!0);h.next_out&&(0!==h.avail_out&&r!==m.Z_STREAM_END&&(0!==h.avail_in||n!==m.Z_FINISH&&n!==m.Z_SYNC_FLUSH)||("string"===this.options.to?(i=p.utf8border(h.output,h.next_out),s=h.next_out-i,a=p.buf2string(h.output,i),h.next_out=s,h.avail_out=u-s,s&&d.arraySet(h.output,h.output,i,s,0),this.onData(a)):this.onData(d.shrinkBuf(h.output,h.next_out)))),0===h.avail_in&&0===h.avail_out&&(f=!0)}while((0<h.avail_in||0===h.avail_out)&&r!==m.Z_STREAM_END);return r===m.Z_STREAM_END&&(n=m.Z_FINISH),n===m.Z_FINISH?(r=c.inflateEnd(this.strm),this.onEnd(r),this.ended=!0,r===m.Z_OK):n!==m.Z_SYNC_FLUSH||(this.onEnd(m.Z_OK),!(h.avail_out=0))},a.prototype.onData=function(e){this.chunks.push(e)},a.prototype.onEnd=function(e){e===m.Z_OK&&("string"===this.options.to?this.result=this.chunks.join(""):this.result=d.flattenChunks(this.chunks)),this.chunks=[],this.err=e,this.msg=this.strm.msg},r.Inflate=a,r.inflate=o,r.inflateRaw=function(e,t){return(t=t||{}).raw=!0,o(e,t)},r.ungzip=o},{"./utils/common":41,"./utils/strings":42,"./zlib/constants":44,"./zlib/gzheader":47,"./zlib/inflate":49,"./zlib/messages":51,"./zlib/zstream":53}],41:[function(e,t,r){"use strict";var n="undefined"!=typeof Uint8Array&&"undefined"!=typeof Uint16Array&&"undefined"!=typeof Int32Array;r.assign=function(e){for(var t=Array.prototype.slice.call(arguments,1);t.length;){var r=t.shift();if(r){if("object"!=typeof r)throw new TypeError(r+"must be non-object");for(var n in r)r.hasOwnProperty(n)&&(e[n]=r[n])}}return e},r.shrinkBuf=function(e,t){return e.length===t?e:e.subarray?e.subarray(0,t):(e.length=t,e)};var i={arraySet:function(e,t,r,n,i){if(t.subarray&&e.subarray)e.set(t.subarray(r,r+n),i);else for(var s=0;s<n;s++)e[i+s]=t[r+s]},flattenChunks:function(e){var t,r,n,i,s,a;for(t=n=0,r=e.length;t<r;t++)n+=e[t].length;for(a=new Uint8Array(n),t=i=0,r=e.length;t<r;t++)s=e[t],a.set(s,i),i+=s.length;return a}},s={arraySet:function(e,t,r,n,i){for(var s=0;s<n;s++)e[i+s]=t[r+s]},flattenChunks:function(e){return[].concat.apply([],e)}};r.setTyped=function(e){e?(r.Buf8=Uint8Array,r.Buf16=Uint16Array,r.Buf32=Int32Array,r.assign(r,i)):(r.Buf8=Array,r.Buf16=Array,r.Buf32=Array,r.assign(r,s))},r.setTyped(n)},{}],42:[function(e,t,r){"use strict";var h=e("./common"),i=!0,s=!0;try{String.fromCharCode.apply(null,[0])}catch(e){i=!1}try{String.fromCharCode.apply(null,new Uint8Array(1))}catch(e){s=!1}for(var u=new h.Buf8(256),n=0;n<256;n++)u[n]=252<=n?6:248<=n?5:240<=n?4:224<=n?3:192<=n?2:1;function l(e,t){if(t<65537&&(e.subarray&&s||!e.subarray&&i))return String.fromCharCode.apply(null,h.shrinkBuf(e,t));for(var r="",n=0;n<t;n++)r+=String.fromCharCode(e[n]);return r}u[254]=u[254]=1,r.string2buf=function(e){var t,r,n,i,s,a=e.length,o=0;for(i=0;i<a;i++)55296==(64512&(r=e.charCodeAt(i)))&&i+1<a&&56320==(64512&(n=e.charCodeAt(i+1)))&&(r=65536+(r-55296<<10)+(n-56320),i++),o+=r<128?1:r<2048?2:r<65536?3:4;for(t=new h.Buf8(o),i=s=0;s<o;i++)55296==(64512&(r=e.charCodeAt(i)))&&i+1<a&&56320==(64512&(n=e.charCodeAt(i+1)))&&(r=65536+(r-55296<<10)+(n-56320),i++),r<128?t[s++]=r:(r<2048?t[s++]=192|r>>>6:(r<65536?t[s++]=224|r>>>12:(t[s++]=240|r>>>18,t[s++]=128|r>>>12&63),t[s++]=128|r>>>6&63),t[s++]=128|63&r);return t},r.buf2binstring=function(e){return l(e,e.length)},r.binstring2buf=function(e){for(var t=new h.Buf8(e.length),r=0,n=t.length;r<n;r++)t[r]=e.charCodeAt(r);return t},r.buf2string=function(e,t){var r,n,i,s,a=t||e.length,o=new Array(2*a);for(r=n=0;r<a;)if((i=e[r++])<128)o[n++]=i;else if(4<(s=u[i]))o[n++]=65533,r+=s-1;else{for(i&=2===s?31:3===s?15:7;1<s&&r<a;)i=i<<6|63&e[r++],s--;1<s?o[n++]=65533:i<65536?o[n++]=i:(i-=65536,o[n++]=55296|i>>10&1023,o[n++]=56320|1023&i)}return l(o,n)},r.utf8border=function(e,t){var r;for((t=t||e.length)>e.length&&(t=e.length),r=t-1;0<=r&&128==(192&e[r]);)r--;return r<0?t:0===r?t:r+u[e[r]]>t?r:t}},{"./common":41}],43:[function(e,t,r){"use strict";t.exports=function(e,t,r,n){for(var i=65535&e|0,s=e>>>16&65535|0,a=0;0!==r;){for(r-=a=2e3<r?2e3:r;s=s+(i=i+t[n++]|0)|0,--a;);i%=65521,s%=65521}return i|s<<16|0}},{}],44:[function(e,t,r){"use strict";t.exports={Z_NO_FLUSH:0,Z_PARTIAL_FLUSH:1,Z_SYNC_FLUSH:2,Z_FULL_FLUSH:3,Z_FINISH:4,Z_BLOCK:5,Z_TREES:6,Z_OK:0,Z_STREAM_END:1,Z_NEED_DICT:2,Z_ERRNO:-1,Z_STREAM_ERROR:-2,Z_DATA_ERROR:-3,Z_BUF_ERROR:-5,Z_NO_COMPRESSION:0,Z_BEST_SPEED:1,Z_BEST_COMPRESSION:9,Z_DEFAULT_COMPRESSION:-1,Z_FILTERED:1,Z_HUFFMAN_ONLY:2,Z_RLE:3,Z_FIXED:4,Z_DEFAULT_STRATEGY:0,Z_BINARY:0,Z_TEXT:1,Z_UNKNOWN:2,Z_DEFLATED:8}},{}],45:[function(e,t,r){"use strict";var o=function(){for(var e,t=[],r=0;r<256;r++){e=r;for(var n=0;n<8;n++)e=1&e?3988292384^e>>>1:e>>>1;t[r]=e}return t}();t.exports=function(e,t,r,n){var i=o,s=n+r;e^=-1;for(var a=n;a<s;a++)e=e>>>8^i[255&(e^t[a])];return-1^e}},{}],46:[function(e,t,r){"use strict";var h,c=e("../utils/common"),u=e("./trees"),d=e("./adler32"),p=e("./crc32"),n=e("./messages"),l=0,f=4,m=0,_=-2,g=-1,b=4,i=2,v=8,y=9,s=286,a=30,o=19,w=2*s+1,k=15,x=3,S=258,z=S+x+1,C=42,E=113,A=1,I=2,O=3,B=4;function R(e,t){return e.msg=n[t],t}function T(e){return(e<<1)-(4<e?9:0)}function D(e){for(var t=e.length;0<=--t;)e[t]=0}function F(e){var t=e.state,r=t.pending;r>e.avail_out&&(r=e.avail_out),0!==r&&(c.arraySet(e.output,t.pending_buf,t.pending_out,r,e.next_out),e.next_out+=r,t.pending_out+=r,e.total_out+=r,e.avail_out-=r,t.pending-=r,0===t.pending&&(t.pending_out=0))}function N(e,t){u._tr_flush_block(e,0<=e.block_start?e.block_start:-1,e.strstart-e.block_start,t),e.block_start=e.strstart,F(e.strm)}function U(e,t){e.pending_buf[e.pending++]=t}function P(e,t){e.pending_buf[e.pending++]=t>>>8&255,e.pending_buf[e.pending++]=255&t}function L(e,t){var r,n,i=e.max_chain_length,s=e.strstart,a=e.prev_length,o=e.nice_match,h=e.strstart>e.w_size-z?e.strstart-(e.w_size-z):0,u=e.window,l=e.w_mask,f=e.prev,c=e.strstart+S,d=u[s+a-1],p=u[s+a];e.prev_length>=e.good_match&&(i>>=2),o>e.lookahead&&(o=e.lookahead);do{if(u[(r=t)+a]===p&&u[r+a-1]===d&&u[r]===u[s]&&u[++r]===u[s+1]){s+=2,r++;do{}while(u[++s]===u[++r]&&u[++s]===u[++r]&&u[++s]===u[++r]&&u[++s]===u[++r]&&u[++s]===u[++r]&&u[++s]===u[++r]&&u[++s]===u[++r]&&u[++s]===u[++r]&&s<c);if(n=S-(c-s),s=c-S,a<n){if(e.match_start=t,o<=(a=n))break;d=u[s+a-1],p=u[s+a]}}}while((t=f[t&l])>h&&0!=--i);return a<=e.lookahead?a:e.lookahead}function j(e){var t,r,n,i,s,a,o,h,u,l,f=e.w_size;do{if(i=e.window_size-e.lookahead-e.strstart,e.strstart>=f+(f-z)){for(c.arraySet(e.window,e.window,f,f,0),e.match_start-=f,e.strstart-=f,e.block_start-=f,t=r=e.hash_size;n=e.head[--t],e.head[t]=f<=n?n-f:0,--r;);for(t=r=f;n=e.prev[--t],e.prev[t]=f<=n?n-f:0,--r;);i+=f}if(0===e.strm.avail_in)break;if(a=e.strm,o=e.window,h=e.strstart+e.lookahead,u=i,l=void 0,l=a.avail_in,u<l&&(l=u),r=0===l?0:(a.avail_in-=l,c.arraySet(o,a.input,a.next_in,l,h),1===a.state.wrap?a.adler=d(a.adler,o,l,h):2===a.state.wrap&&(a.adler=p(a.adler,o,l,h)),a.next_in+=l,a.total_in+=l,l),e.lookahead+=r,e.lookahead+e.insert>=x)for(s=e.strstart-e.insert,e.ins_h=e.window[s],e.ins_h=(e.ins_h<<e.hash_shift^e.window[s+1])&e.hash_mask;e.insert&&(e.ins_h=(e.ins_h<<e.hash_shift^e.window[s+x-1])&e.hash_mask,e.prev[s&e.w_mask]=e.head[e.ins_h],e.head[e.ins_h]=s,s++,e.insert--,!(e.lookahead+e.insert<x)););}while(e.lookahead<z&&0!==e.strm.avail_in)}function Z(e,t){for(var r,n;;){if(e.lookahead<z){if(j(e),e.lookahead<z&&t===l)return A;if(0===e.lookahead)break}if(r=0,e.lookahead>=x&&(e.ins_h=(e.ins_h<<e.hash_shift^e.window[e.strstart+x-1])&e.hash_mask,r=e.prev[e.strstart&e.w_mask]=e.head[e.ins_h],e.head[e.ins_h]=e.strstart),0!==r&&e.strstart-r<=e.w_size-z&&(e.match_length=L(e,r)),e.match_length>=x)if(n=u._tr_tally(e,e.strstart-e.match_start,e.match_length-x),e.lookahead-=e.match_length,e.match_length<=e.max_lazy_match&&e.lookahead>=x){for(e.match_length--;e.strstart++,e.ins_h=(e.ins_h<<e.hash_shift^e.window[e.strstart+x-1])&e.hash_mask,r=e.prev[e.strstart&e.w_mask]=e.head[e.ins_h],e.head[e.ins_h]=e.strstart,0!=--e.match_length;);e.strstart++}else e.strstart+=e.match_length,e.match_length=0,e.ins_h=e.window[e.strstart],e.ins_h=(e.ins_h<<e.hash_shift^e.window[e.strstart+1])&e.hash_mask;else n=u._tr_tally(e,0,e.window[e.strstart]),e.lookahead--,e.strstart++;if(n&&(N(e,!1),0===e.strm.avail_out))return A}return e.insert=e.strstart<x-1?e.strstart:x-1,t===f?(N(e,!0),0===e.strm.avail_out?O:B):e.last_lit&&(N(e,!1),0===e.strm.avail_out)?A:I}function W(e,t){for(var r,n,i;;){if(e.lookahead<z){if(j(e),e.lookahead<z&&t===l)return A;if(0===e.lookahead)break}if(r=0,e.lookahead>=x&&(e.ins_h=(e.ins_h<<e.hash_shift^e.window[e.strstart+x-1])&e.hash_mask,r=e.prev[e.strstart&e.w_mask]=e.head[e.ins_h],e.head[e.ins_h]=e.strstart),e.prev_length=e.match_length,e.prev_match=e.match_start,e.match_length=x-1,0!==r&&e.prev_length<e.max_lazy_match&&e.strstart-r<=e.w_size-z&&(e.match_length=L(e,r),e.match_length<=5&&(1===e.strategy||e.match_length===x&&4096<e.strstart-e.match_start)&&(e.match_length=x-1)),e.prev_length>=x&&e.match_length<=e.prev_length){for(i=e.strstart+e.lookahead-x,n=u._tr_tally(e,e.strstart-1-e.prev_match,e.prev_length-x),e.lookahead-=e.prev_length-1,e.prev_length-=2;++e.strstart<=i&&(e.ins_h=(e.ins_h<<e.hash_shift^e.window[e.strstart+x-1])&e.hash_mask,r=e.prev[e.strstart&e.w_mask]=e.head[e.ins_h],e.head[e.ins_h]=e.strstart),0!=--e.prev_length;);if(e.match_available=0,e.match_length=x-1,e.strstart++,n&&(N(e,!1),0===e.strm.avail_out))return A}else if(e.match_available){if((n=u._tr_tally(e,0,e.window[e.strstart-1]))&&N(e,!1),e.strstart++,e.lookahead--,0===e.strm.avail_out)return A}else e.match_available=1,e.strstart++,e.lookahead--}return e.match_available&&(n=u._tr_tally(e,0,e.window[e.strstart-1]),e.match_available=0),e.insert=e.strstart<x-1?e.strstart:x-1,t===f?(N(e,!0),0===e.strm.avail_out?O:B):e.last_lit&&(N(e,!1),0===e.strm.avail_out)?A:I}function M(e,t,r,n,i){this.good_length=e,this.max_lazy=t,this.nice_length=r,this.max_chain=n,this.func=i}function H(){this.strm=null,this.status=0,this.pending_buf=null,this.pending_buf_size=0,this.pending_out=0,this.pending=0,this.wrap=0,this.gzhead=null,this.gzindex=0,this.method=v,this.last_flush=-1,this.w_size=0,this.w_bits=0,this.w_mask=0,this.window=null,this.window_size=0,this.prev=null,this.head=null,this.ins_h=0,this.hash_size=0,this.hash_bits=0,this.hash_mask=0,this.hash_shift=0,this.block_start=0,this.match_length=0,this.prev_match=0,this.match_available=0,this.strstart=0,this.match_start=0,this.lookahead=0,this.prev_length=0,this.max_chain_length=0,this.max_lazy_match=0,this.level=0,this.strategy=0,this.good_match=0,this.nice_match=0,this.dyn_ltree=new c.Buf16(2*w),this.dyn_dtree=new c.Buf16(2*(2*a+1)),this.bl_tree=new c.Buf16(2*(2*o+1)),D(this.dyn_ltree),D(this.dyn_dtree),D(this.bl_tree),this.l_desc=null,this.d_desc=null,this.bl_desc=null,this.bl_count=new c.Buf16(k+1),this.heap=new c.Buf16(2*s+1),D(this.heap),this.heap_len=0,this.heap_max=0,this.depth=new c.Buf16(2*s+1),D(this.depth),this.l_buf=0,this.lit_bufsize=0,this.last_lit=0,this.d_buf=0,this.opt_len=0,this.static_len=0,this.matches=0,this.insert=0,this.bi_buf=0,this.bi_valid=0}function G(e){var t;return e&&e.state?(e.total_in=e.total_out=0,e.data_type=i,(t=e.state).pending=0,t.pending_out=0,t.wrap<0&&(t.wrap=-t.wrap),t.status=t.wrap?C:E,e.adler=2===t.wrap?0:1,t.last_flush=l,u._tr_init(t),m):R(e,_)}function K(e){var t=G(e);return t===m&&function(e){e.window_size=2*e.w_size,D(e.head),e.max_lazy_match=h[e.level].max_lazy,e.good_match=h[e.level].good_length,e.nice_match=h[e.level].nice_length,e.max_chain_length=h[e.level].max_chain,e.strstart=0,e.block_start=0,e.lookahead=0,e.insert=0,e.match_length=e.prev_length=x-1,e.match_available=0,e.ins_h=0}(e.state),t}function Y(e,t,r,n,i,s){if(!e)return _;var a=1;if(t===g&&(t=6),n<0?(a=0,n=-n):15<n&&(a=2,n-=16),i<1||y<i||r!==v||n<8||15<n||t<0||9<t||s<0||b<s)return R(e,_);8===n&&(n=9);var o=new H;return(e.state=o).strm=e,o.wrap=a,o.gzhead=null,o.w_bits=n,o.w_size=1<<o.w_bits,o.w_mask=o.w_size-1,o.hash_bits=i+7,o.hash_size=1<<o.hash_bits,o.hash_mask=o.hash_size-1,o.hash_shift=~~((o.hash_bits+x-1)/x),o.window=new c.Buf8(2*o.w_size),o.head=new c.Buf16(o.hash_size),o.prev=new c.Buf16(o.w_size),o.lit_bufsize=1<<i+6,o.pending_buf_size=4*o.lit_bufsize,o.pending_buf=new c.Buf8(o.pending_buf_size),o.d_buf=1*o.lit_bufsize,o.l_buf=3*o.lit_bufsize,o.level=t,o.strategy=s,o.method=r,K(e)}h=[new M(0,0,0,0,function(e,t){var r=65535;for(r>e.pending_buf_size-5&&(r=e.pending_buf_size-5);;){if(e.lookahead<=1){if(j(e),0===e.lookahead&&t===l)return A;if(0===e.lookahead)break}e.strstart+=e.lookahead,e.lookahead=0;var n=e.block_start+r;if((0===e.strstart||e.strstart>=n)&&(e.lookahead=e.strstart-n,e.strstart=n,N(e,!1),0===e.strm.avail_out))return A;if(e.strstart-e.block_start>=e.w_size-z&&(N(e,!1),0===e.strm.avail_out))return A}return e.insert=0,t===f?(N(e,!0),0===e.strm.avail_out?O:B):(e.strstart>e.block_start&&(N(e,!1),e.strm.avail_out),A)}),new M(4,4,8,4,Z),new M(4,5,16,8,Z),new M(4,6,32,32,Z),new M(4,4,16,16,W),new M(8,16,32,32,W),new M(8,16,128,128,W),new M(8,32,128,256,W),new M(32,128,258,1024,W),new M(32,258,258,4096,W)],r.deflateInit=function(e,t){return Y(e,t,v,15,8,0)},r.deflateInit2=Y,r.deflateReset=K,r.deflateResetKeep=G,r.deflateSetHeader=function(e,t){return e&&e.state?2!==e.state.wrap?_:(e.state.gzhead=t,m):_},r.deflate=function(e,t){var r,n,i,s;if(!e||!e.state||5<t||t<0)return e?R(e,_):_;if(n=e.state,!e.output||!e.input&&0!==e.avail_in||666===n.status&&t!==f)return R(e,0===e.avail_out?-5:_);if(n.strm=e,r=n.last_flush,n.last_flush=t,n.status===C)if(2===n.wrap)e.adler=0,U(n,31),U(n,139),U(n,8),n.gzhead?(U(n,(n.gzhead.text?1:0)+(n.gzhead.hcrc?2:0)+(n.gzhead.extra?4:0)+(n.gzhead.name?8:0)+(n.gzhead.comment?16:0)),U(n,255&n.gzhead.time),U(n,n.gzhead.time>>8&255),U(n,n.gzhead.time>>16&255),U(n,n.gzhead.time>>24&255),U(n,9===n.level?2:2<=n.strategy||n.level<2?4:0),U(n,255&n.gzhead.os),n.gzhead.extra&&n.gzhead.extra.length&&(U(n,255&n.gzhead.extra.length),U(n,n.gzhead.extra.length>>8&255)),n.gzhead.hcrc&&(e.adler=p(e.adler,n.pending_buf,n.pending,0)),n.gzindex=0,n.status=69):(U(n,0),U(n,0),U(n,0),U(n,0),U(n,0),U(n,9===n.level?2:2<=n.strategy||n.level<2?4:0),U(n,3),n.status=E);else{var a=v+(n.w_bits-8<<4)<<8;a|=(2<=n.strategy||n.level<2?0:n.level<6?1:6===n.level?2:3)<<6,0!==n.strstart&&(a|=32),a+=31-a%31,n.status=E,P(n,a),0!==n.strstart&&(P(n,e.adler>>>16),P(n,65535&e.adler)),e.adler=1}if(69===n.status)if(n.gzhead.extra){for(i=n.pending;n.gzindex<(65535&n.gzhead.extra.length)&&(n.pending!==n.pending_buf_size||(n.gzhead.hcrc&&n.pending>i&&(e.adler=p(e.adler,n.pending_buf,n.pending-i,i)),F(e),i=n.pending,n.pending!==n.pending_buf_size));)U(n,255&n.gzhead.extra[n.gzindex]),n.gzindex++;n.gzhead.hcrc&&n.pending>i&&(e.adler=p(e.adler,n.pending_buf,n.pending-i,i)),n.gzindex===n.gzhead.extra.length&&(n.gzindex=0,n.status=73)}else n.status=73;if(73===n.status)if(n.gzhead.name){i=n.pending;do{if(n.pending===n.pending_buf_size&&(n.gzhead.hcrc&&n.pending>i&&(e.adler=p(e.adler,n.pending_buf,n.pending-i,i)),F(e),i=n.pending,n.pending===n.pending_buf_size)){s=1;break}s=n.gzindex<n.gzhead.name.length?255&n.gzhead.name.charCodeAt(n.gzindex++):0,U(n,s)}while(0!==s);n.gzhead.hcrc&&n.pending>i&&(e.adler=p(e.adler,n.pending_buf,n.pending-i,i)),0===s&&(n.gzindex=0,n.status=91)}else n.status=91;if(91===n.status)if(n.gzhead.comment){i=n.pending;do{if(n.pending===n.pending_buf_size&&(n.gzhead.hcrc&&n.pending>i&&(e.adler=p(e.adler,n.pending_buf,n.pending-i,i)),F(e),i=n.pending,n.pending===n.pending_buf_size)){s=1;break}s=n.gzindex<n.gzhead.comment.length?255&n.gzhead.comment.charCodeAt(n.gzindex++):0,U(n,s)}while(0!==s);n.gzhead.hcrc&&n.pending>i&&(e.adler=p(e.adler,n.pending_buf,n.pending-i,i)),0===s&&(n.status=103)}else n.status=103;if(103===n.status&&(n.gzhead.hcrc?(n.pending+2>n.pending_buf_size&&F(e),n.pending+2<=n.pending_buf_size&&(U(n,255&e.adler),U(n,e.adler>>8&255),e.adler=0,n.status=E)):n.status=E),0!==n.pending){if(F(e),0===e.avail_out)return n.last_flush=-1,m}else if(0===e.avail_in&&T(t)<=T(r)&&t!==f)return R(e,-5);if(666===n.status&&0!==e.avail_in)return R(e,-5);if(0!==e.avail_in||0!==n.lookahead||t!==l&&666!==n.status){var o=2===n.strategy?function(e,t){for(var r;;){if(0===e.lookahead&&(j(e),0===e.lookahead)){if(t===l)return A;break}if(e.match_length=0,r=u._tr_tally(e,0,e.window[e.strstart]),e.lookahead--,e.strstart++,r&&(N(e,!1),0===e.strm.avail_out))return A}return e.insert=0,t===f?(N(e,!0),0===e.strm.avail_out?O:B):e.last_lit&&(N(e,!1),0===e.strm.avail_out)?A:I}(n,t):3===n.strategy?function(e,t){for(var r,n,i,s,a=e.window;;){if(e.lookahead<=S){if(j(e),e.lookahead<=S&&t===l)return A;if(0===e.lookahead)break}if(e.match_length=0,e.lookahead>=x&&0<e.strstart&&(n=a[i=e.strstart-1])===a[++i]&&n===a[++i]&&n===a[++i]){s=e.strstart+S;do{}while(n===a[++i]&&n===a[++i]&&n===a[++i]&&n===a[++i]&&n===a[++i]&&n===a[++i]&&n===a[++i]&&n===a[++i]&&i<s);e.match_length=S-(s-i),e.match_length>e.lookahead&&(e.match_length=e.lookahead)}if(e.match_length>=x?(r=u._tr_tally(e,1,e.match_length-x),e.lookahead-=e.match_length,e.strstart+=e.match_length,e.match_length=0):(r=u._tr_tally(e,0,e.window[e.strstart]),e.lookahead--,e.strstart++),r&&(N(e,!1),0===e.strm.avail_out))return A}return e.insert=0,t===f?(N(e,!0),0===e.strm.avail_out?O:B):e.last_lit&&(N(e,!1),0===e.strm.avail_out)?A:I}(n,t):h[n.level].func(n,t);if(o!==O&&o!==B||(n.status=666),o===A||o===O)return 0===e.avail_out&&(n.last_flush=-1),m;if(o===I&&(1===t?u._tr_align(n):5!==t&&(u._tr_stored_block(n,0,0,!1),3===t&&(D(n.head),0===n.lookahead&&(n.strstart=0,n.block_start=0,n.insert=0))),F(e),0===e.avail_out))return n.last_flush=-1,m}return t!==f?m:n.wrap<=0?1:(2===n.wrap?(U(n,255&e.adler),U(n,e.adler>>8&255),U(n,e.adler>>16&255),U(n,e.adler>>24&255),U(n,255&e.total_in),U(n,e.total_in>>8&255),U(n,e.total_in>>16&255),U(n,e.total_in>>24&255)):(P(n,e.adler>>>16),P(n,65535&e.adler)),F(e),0<n.wrap&&(n.wrap=-n.wrap),0!==n.pending?m:1)},r.deflateEnd=function(e){var t;return e&&e.state?(t=e.state.status)!==C&&69!==t&&73!==t&&91!==t&&103!==t&&t!==E&&666!==t?R(e,_):(e.state=null,t===E?R(e,-3):m):_},r.deflateSetDictionary=function(e,t){var r,n,i,s,a,o,h,u,l=t.length;if(!e||!e.state)return _;if(2===(s=(r=e.state).wrap)||1===s&&r.status!==C||r.lookahead)return _;for(1===s&&(e.adler=d(e.adler,t,l,0)),r.wrap=0,l>=r.w_size&&(0===s&&(D(r.head),r.strstart=0,r.block_start=0,r.insert=0),u=new c.Buf8(r.w_size),c.arraySet(u,t,l-r.w_size,r.w_size,0),t=u,l=r.w_size),a=e.avail_in,o=e.next_in,h=e.input,e.avail_in=l,e.next_in=0,e.input=t,j(r);r.lookahead>=x;){for(n=r.strstart,i=r.lookahead-(x-1);r.ins_h=(r.ins_h<<r.hash_shift^r.window[n+x-1])&r.hash_mask,r.prev[n&r.w_mask]=r.head[r.ins_h],r.head[r.ins_h]=n,n++,--i;);r.strstart=n,r.lookahead=x-1,j(r)}return r.strstart+=r.lookahead,r.block_start=r.strstart,r.insert=r.lookahead,r.lookahead=0,r.match_length=r.prev_length=x-1,r.match_available=0,e.next_in=o,e.input=h,e.avail_in=a,r.wrap=s,m},r.deflateInfo="pako deflate (from Nodeca project)"},{"../utils/common":41,"./adler32":43,"./crc32":45,"./messages":51,"./trees":52}],47:[function(e,t,r){"use strict";t.exports=function(){this.text=0,this.time=0,this.xflags=0,this.os=0,this.extra=null,this.extra_len=0,this.name="",this.comment="",this.hcrc=0,this.done=!1}},{}],48:[function(e,t,r){"use strict";t.exports=function(e,t){var r,n,i,s,a,o,h,u,l,f,c,d,p,m,_,g,b,v,y,w,k,x,S,z,C;r=e.state,n=e.next_in,z=e.input,i=n+(e.avail_in-5),s=e.next_out,C=e.output,a=s-(t-e.avail_out),o=s+(e.avail_out-257),h=r.dmax,u=r.wsize,l=r.whave,f=r.wnext,c=r.window,d=r.hold,p=r.bits,m=r.lencode,_=r.distcode,g=(1<<r.lenbits)-1,b=(1<<r.distbits)-1;e:do{p<15&&(d+=z[n++]<<p,p+=8,d+=z[n++]<<p,p+=8),v=m[d&g];t:for(;;){if(d>>>=y=v>>>24,p-=y,0===(y=v>>>16&255))C[s++]=65535&v;else{if(!(16&y)){if(0==(64&y)){v=m[(65535&v)+(d&(1<<y)-1)];continue t}if(32&y){r.mode=12;break e}e.msg="invalid literal/length code",r.mode=30;break e}w=65535&v,(y&=15)&&(p<y&&(d+=z[n++]<<p,p+=8),w+=d&(1<<y)-1,d>>>=y,p-=y),p<15&&(d+=z[n++]<<p,p+=8,d+=z[n++]<<p,p+=8),v=_[d&b];r:for(;;){if(d>>>=y=v>>>24,p-=y,!(16&(y=v>>>16&255))){if(0==(64&y)){v=_[(65535&v)+(d&(1<<y)-1)];continue r}e.msg="invalid distance code",r.mode=30;break e}if(k=65535&v,p<(y&=15)&&(d+=z[n++]<<p,(p+=8)<y&&(d+=z[n++]<<p,p+=8)),h<(k+=d&(1<<y)-1)){e.msg="invalid distance too far back",r.mode=30;break e}if(d>>>=y,p-=y,(y=s-a)<k){if(l<(y=k-y)&&r.sane){e.msg="invalid distance too far back",r.mode=30;break e}if(S=c,(x=0)===f){if(x+=u-y,y<w){for(w-=y;C[s++]=c[x++],--y;);x=s-k,S=C}}else if(f<y){if(x+=u+f-y,(y-=f)<w){for(w-=y;C[s++]=c[x++],--y;);if(x=0,f<w){for(w-=y=f;C[s++]=c[x++],--y;);x=s-k,S=C}}}else if(x+=f-y,y<w){for(w-=y;C[s++]=c[x++],--y;);x=s-k,S=C}for(;2<w;)C[s++]=S[x++],C[s++]=S[x++],C[s++]=S[x++],w-=3;w&&(C[s++]=S[x++],1<w&&(C[s++]=S[x++]))}else{for(x=s-k;C[s++]=C[x++],C[s++]=C[x++],C[s++]=C[x++],2<(w-=3););w&&(C[s++]=C[x++],1<w&&(C[s++]=C[x++]))}break}}break}}while(n<i&&s<o);n-=w=p>>3,d&=(1<<(p-=w<<3))-1,e.next_in=n,e.next_out=s,e.avail_in=n<i?i-n+5:5-(n-i),e.avail_out=s<o?o-s+257:257-(s-o),r.hold=d,r.bits=p}},{}],49:[function(e,t,r){"use strict";var I=e("../utils/common"),O=e("./adler32"),B=e("./crc32"),R=e("./inffast"),T=e("./inftrees"),D=1,F=2,N=0,U=-2,P=1,n=852,i=592;function L(e){return(e>>>24&255)+(e>>>8&65280)+((65280&e)<<8)+((255&e)<<24)}function s(){this.mode=0,this.last=!1,this.wrap=0,this.havedict=!1,this.flags=0,this.dmax=0,this.check=0,this.total=0,this.head=null,this.wbits=0,this.wsize=0,this.whave=0,this.wnext=0,this.window=null,this.hold=0,this.bits=0,this.length=0,this.offset=0,this.extra=0,this.lencode=null,this.distcode=null,this.lenbits=0,this.distbits=0,this.ncode=0,this.nlen=0,this.ndist=0,this.have=0,this.next=null,this.lens=new I.Buf16(320),this.work=new I.Buf16(288),this.lendyn=null,this.distdyn=null,this.sane=0,this.back=0,this.was=0}function a(e){var t;return e&&e.state?(t=e.state,e.total_in=e.total_out=t.total=0,e.msg="",t.wrap&&(e.adler=1&t.wrap),t.mode=P,t.last=0,t.havedict=0,t.dmax=32768,t.head=null,t.hold=0,t.bits=0,t.lencode=t.lendyn=new I.Buf32(n),t.distcode=t.distdyn=new I.Buf32(i),t.sane=1,t.back=-1,N):U}function o(e){var t;return e&&e.state?((t=e.state).wsize=0,t.whave=0,t.wnext=0,a(e)):U}function h(e,t){var r,n;return e&&e.state?(n=e.state,t<0?(r=0,t=-t):(r=1+(t>>4),t<48&&(t&=15)),t&&(t<8||15<t)?U:(null!==n.window&&n.wbits!==t&&(n.window=null),n.wrap=r,n.wbits=t,o(e))):U}function u(e,t){var r,n;return e?(n=new s,(e.state=n).window=null,(r=h(e,t))!==N&&(e.state=null),r):U}var l,f,c=!0;function j(e){if(c){var t;for(l=new I.Buf32(512),f=new I.Buf32(32),t=0;t<144;)e.lens[t++]=8;for(;t<256;)e.lens[t++]=9;for(;t<280;)e.lens[t++]=7;for(;t<288;)e.lens[t++]=8;for(T(D,e.lens,0,288,l,0,e.work,{bits:9}),t=0;t<32;)e.lens[t++]=5;T(F,e.lens,0,32,f,0,e.work,{bits:5}),c=!1}e.lencode=l,e.lenbits=9,e.distcode=f,e.distbits=5}function Z(e,t,r,n){var i,s=e.state;return null===s.window&&(s.wsize=1<<s.wbits,s.wnext=0,s.whave=0,s.window=new I.Buf8(s.wsize)),n>=s.wsize?(I.arraySet(s.window,t,r-s.wsize,s.wsize,0),s.wnext=0,s.whave=s.wsize):(n<(i=s.wsize-s.wnext)&&(i=n),I.arraySet(s.window,t,r-n,i,s.wnext),(n-=i)?(I.arraySet(s.window,t,r-n,n,0),s.wnext=n,s.whave=s.wsize):(s.wnext+=i,s.wnext===s.wsize&&(s.wnext=0),s.whave<s.wsize&&(s.whave+=i))),0}r.inflateReset=o,r.inflateReset2=h,r.inflateResetKeep=a,r.inflateInit=function(e){return u(e,15)},r.inflateInit2=u,r.inflate=function(e,t){var r,n,i,s,a,o,h,u,l,f,c,d,p,m,_,g,b,v,y,w,k,x,S,z,C=0,E=new I.Buf8(4),A=[16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];if(!e||!e.state||!e.output||!e.input&&0!==e.avail_in)return U;12===(r=e.state).mode&&(r.mode=13),a=e.next_out,i=e.output,h=e.avail_out,s=e.next_in,n=e.input,o=e.avail_in,u=r.hold,l=r.bits,f=o,c=h,x=N;e:for(;;)switch(r.mode){case P:if(0===r.wrap){r.mode=13;break}for(;l<16;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}if(2&r.wrap&&35615===u){E[r.check=0]=255&u,E[1]=u>>>8&255,r.check=B(r.check,E,2,0),l=u=0,r.mode=2;break}if(r.flags=0,r.head&&(r.head.done=!1),!(1&r.wrap)||(((255&u)<<8)+(u>>8))%31){e.msg="incorrect header check",r.mode=30;break}if(8!=(15&u)){e.msg="unknown compression method",r.mode=30;break}if(l-=4,k=8+(15&(u>>>=4)),0===r.wbits)r.wbits=k;else if(k>r.wbits){e.msg="invalid window size",r.mode=30;break}r.dmax=1<<k,e.adler=r.check=1,r.mode=512&u?10:12,l=u=0;break;case 2:for(;l<16;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}if(r.flags=u,8!=(255&r.flags)){e.msg="unknown compression method",r.mode=30;break}if(57344&r.flags){e.msg="unknown header flags set",r.mode=30;break}r.head&&(r.head.text=u>>8&1),512&r.flags&&(E[0]=255&u,E[1]=u>>>8&255,r.check=B(r.check,E,2,0)),l=u=0,r.mode=3;case 3:for(;l<32;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}r.head&&(r.head.time=u),512&r.flags&&(E[0]=255&u,E[1]=u>>>8&255,E[2]=u>>>16&255,E[3]=u>>>24&255,r.check=B(r.check,E,4,0)),l=u=0,r.mode=4;case 4:for(;l<16;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}r.head&&(r.head.xflags=255&u,r.head.os=u>>8),512&r.flags&&(E[0]=255&u,E[1]=u>>>8&255,r.check=B(r.check,E,2,0)),l=u=0,r.mode=5;case 5:if(1024&r.flags){for(;l<16;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}r.length=u,r.head&&(r.head.extra_len=u),512&r.flags&&(E[0]=255&u,E[1]=u>>>8&255,r.check=B(r.check,E,2,0)),l=u=0}else r.head&&(r.head.extra=null);r.mode=6;case 6:if(1024&r.flags&&(o<(d=r.length)&&(d=o),d&&(r.head&&(k=r.head.extra_len-r.length,r.head.extra||(r.head.extra=new Array(r.head.extra_len)),I.arraySet(r.head.extra,n,s,d,k)),512&r.flags&&(r.check=B(r.check,n,d,s)),o-=d,s+=d,r.length-=d),r.length))break e;r.length=0,r.mode=7;case 7:if(2048&r.flags){if(0===o)break e;for(d=0;k=n[s+d++],r.head&&k&&r.length<65536&&(r.head.name+=String.fromCharCode(k)),k&&d<o;);if(512&r.flags&&(r.check=B(r.check,n,d,s)),o-=d,s+=d,k)break e}else r.head&&(r.head.name=null);r.length=0,r.mode=8;case 8:if(4096&r.flags){if(0===o)break e;for(d=0;k=n[s+d++],r.head&&k&&r.length<65536&&(r.head.comment+=String.fromCharCode(k)),k&&d<o;);if(512&r.flags&&(r.check=B(r.check,n,d,s)),o-=d,s+=d,k)break e}else r.head&&(r.head.comment=null);r.mode=9;case 9:if(512&r.flags){for(;l<16;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}if(u!==(65535&r.check)){e.msg="header crc mismatch",r.mode=30;break}l=u=0}r.head&&(r.head.hcrc=r.flags>>9&1,r.head.done=!0),e.adler=r.check=0,r.mode=12;break;case 10:for(;l<32;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}e.adler=r.check=L(u),l=u=0,r.mode=11;case 11:if(0===r.havedict)return e.next_out=a,e.avail_out=h,e.next_in=s,e.avail_in=o,r.hold=u,r.bits=l,2;e.adler=r.check=1,r.mode=12;case 12:if(5===t||6===t)break e;case 13:if(r.last){u>>>=7&l,l-=7&l,r.mode=27;break}for(;l<3;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}switch(r.last=1&u,l-=1,3&(u>>>=1)){case 0:r.mode=14;break;case 1:if(j(r),r.mode=20,6!==t)break;u>>>=2,l-=2;break e;case 2:r.mode=17;break;case 3:e.msg="invalid block type",r.mode=30}u>>>=2,l-=2;break;case 14:for(u>>>=7&l,l-=7&l;l<32;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}if((65535&u)!=(u>>>16^65535)){e.msg="invalid stored block lengths",r.mode=30;break}if(r.length=65535&u,l=u=0,r.mode=15,6===t)break e;case 15:r.mode=16;case 16:if(d=r.length){if(o<d&&(d=o),h<d&&(d=h),0===d)break e;I.arraySet(i,n,s,d,a),o-=d,s+=d,h-=d,a+=d,r.length-=d;break}r.mode=12;break;case 17:for(;l<14;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}if(r.nlen=257+(31&u),u>>>=5,l-=5,r.ndist=1+(31&u),u>>>=5,l-=5,r.ncode=4+(15&u),u>>>=4,l-=4,286<r.nlen||30<r.ndist){e.msg="too many length or distance symbols",r.mode=30;break}r.have=0,r.mode=18;case 18:for(;r.have<r.ncode;){for(;l<3;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}r.lens[A[r.have++]]=7&u,u>>>=3,l-=3}for(;r.have<19;)r.lens[A[r.have++]]=0;if(r.lencode=r.lendyn,r.lenbits=7,S={bits:r.lenbits},x=T(0,r.lens,0,19,r.lencode,0,r.work,S),r.lenbits=S.bits,x){e.msg="invalid code lengths set",r.mode=30;break}r.have=0,r.mode=19;case 19:for(;r.have<r.nlen+r.ndist;){for(;g=(C=r.lencode[u&(1<<r.lenbits)-1])>>>16&255,b=65535&C,!((_=C>>>24)<=l);){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}if(b<16)u>>>=_,l-=_,r.lens[r.have++]=b;else{if(16===b){for(z=_+2;l<z;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}if(u>>>=_,l-=_,0===r.have){e.msg="invalid bit length repeat",r.mode=30;break}k=r.lens[r.have-1],d=3+(3&u),u>>>=2,l-=2}else if(17===b){for(z=_+3;l<z;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}l-=_,k=0,d=3+(7&(u>>>=_)),u>>>=3,l-=3}else{for(z=_+7;l<z;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}l-=_,k=0,d=11+(127&(u>>>=_)),u>>>=7,l-=7}if(r.have+d>r.nlen+r.ndist){e.msg="invalid bit length repeat",r.mode=30;break}for(;d--;)r.lens[r.have++]=k}}if(30===r.mode)break;if(0===r.lens[256]){e.msg="invalid code -- missing end-of-block",r.mode=30;break}if(r.lenbits=9,S={bits:r.lenbits},x=T(D,r.lens,0,r.nlen,r.lencode,0,r.work,S),r.lenbits=S.bits,x){e.msg="invalid literal/lengths set",r.mode=30;break}if(r.distbits=6,r.distcode=r.distdyn,S={bits:r.distbits},x=T(F,r.lens,r.nlen,r.ndist,r.distcode,0,r.work,S),r.distbits=S.bits,x){e.msg="invalid distances set",r.mode=30;break}if(r.mode=20,6===t)break e;case 20:r.mode=21;case 21:if(6<=o&&258<=h){e.next_out=a,e.avail_out=h,e.next_in=s,e.avail_in=o,r.hold=u,r.bits=l,R(e,c),a=e.next_out,i=e.output,h=e.avail_out,s=e.next_in,n=e.input,o=e.avail_in,u=r.hold,l=r.bits,12===r.mode&&(r.back=-1);break}for(r.back=0;g=(C=r.lencode[u&(1<<r.lenbits)-1])>>>16&255,b=65535&C,!((_=C>>>24)<=l);){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}if(g&&0==(240&g)){for(v=_,y=g,w=b;g=(C=r.lencode[w+((u&(1<<v+y)-1)>>v)])>>>16&255,b=65535&C,!(v+(_=C>>>24)<=l);){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}u>>>=v,l-=v,r.back+=v}if(u>>>=_,l-=_,r.back+=_,r.length=b,0===g){r.mode=26;break}if(32&g){r.back=-1,r.mode=12;break}if(64&g){e.msg="invalid literal/length code",r.mode=30;break}r.extra=15&g,r.mode=22;case 22:if(r.extra){for(z=r.extra;l<z;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}r.length+=u&(1<<r.extra)-1,u>>>=r.extra,l-=r.extra,r.back+=r.extra}r.was=r.length,r.mode=23;case 23:for(;g=(C=r.distcode[u&(1<<r.distbits)-1])>>>16&255,b=65535&C,!((_=C>>>24)<=l);){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}if(0==(240&g)){for(v=_,y=g,w=b;g=(C=r.distcode[w+((u&(1<<v+y)-1)>>v)])>>>16&255,b=65535&C,!(v+(_=C>>>24)<=l);){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}u>>>=v,l-=v,r.back+=v}if(u>>>=_,l-=_,r.back+=_,64&g){e.msg="invalid distance code",r.mode=30;break}r.offset=b,r.extra=15&g,r.mode=24;case 24:if(r.extra){for(z=r.extra;l<z;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}r.offset+=u&(1<<r.extra)-1,u>>>=r.extra,l-=r.extra,r.back+=r.extra}if(r.offset>r.dmax){e.msg="invalid distance too far back",r.mode=30;break}r.mode=25;case 25:if(0===h)break e;if(d=c-h,r.offset>d){if((d=r.offset-d)>r.whave&&r.sane){e.msg="invalid distance too far back",r.mode=30;break}p=d>r.wnext?(d-=r.wnext,r.wsize-d):r.wnext-d,d>r.length&&(d=r.length),m=r.window}else m=i,p=a-r.offset,d=r.length;for(h<d&&(d=h),h-=d,r.length-=d;i[a++]=m[p++],--d;);0===r.length&&(r.mode=21);break;case 26:if(0===h)break e;i[a++]=r.length,h--,r.mode=21;break;case 27:if(r.wrap){for(;l<32;){if(0===o)break e;o--,u|=n[s++]<<l,l+=8}if(c-=h,e.total_out+=c,r.total+=c,c&&(e.adler=r.check=r.flags?B(r.check,i,c,a-c):O(r.check,i,c,a-c)),c=h,(r.flags?u:L(u))!==r.check){e.msg="incorrect data check",r.mode=30;break}l=u=0}r.mode=28;case 28:if(r.wrap&&r.flags){for(;l<32;){if(0===o)break e;o--,u+=n[s++]<<l,l+=8}if(u!==(4294967295&r.total)){e.msg="incorrect length check",r.mode=30;break}l=u=0}r.mode=29;case 29:x=1;break e;case 30:x=-3;break e;case 31:return-4;case 32:default:return U}return e.next_out=a,e.avail_out=h,e.next_in=s,e.avail_in=o,r.hold=u,r.bits=l,(r.wsize||c!==e.avail_out&&r.mode<30&&(r.mode<27||4!==t))&&Z(e,e.output,e.next_out,c-e.avail_out)?(r.mode=31,-4):(f-=e.avail_in,c-=e.avail_out,e.total_in+=f,e.total_out+=c,r.total+=c,r.wrap&&c&&(e.adler=r.check=r.flags?B(r.check,i,c,e.next_out-c):O(r.check,i,c,e.next_out-c)),e.data_type=r.bits+(r.last?64:0)+(12===r.mode?128:0)+(20===r.mode||15===r.mode?256:0),(0==f&&0===c||4===t)&&x===N&&(x=-5),x)},r.inflateEnd=function(e){if(!e||!e.state)return U;var t=e.state;return t.window&&(t.window=null),e.state=null,N},r.inflateGetHeader=function(e,t){var r;return e&&e.state?0==(2&(r=e.state).wrap)?U:((r.head=t).done=!1,N):U},r.inflateSetDictionary=function(e,t){var r,n=t.length;return e&&e.state?0!==(r=e.state).wrap&&11!==r.mode?U:11===r.mode&&O(1,t,n,0)!==r.check?-3:Z(e,t,n,n)?(r.mode=31,-4):(r.havedict=1,N):U},r.inflateInfo="pako inflate (from Nodeca project)"},{"../utils/common":41,"./adler32":43,"./crc32":45,"./inffast":48,"./inftrees":50}],50:[function(e,t,r){"use strict";var D=e("../utils/common"),F=[3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258,0,0],N=[16,16,16,16,16,16,16,16,17,17,17,17,18,18,18,18,19,19,19,19,20,20,20,20,21,21,21,21,16,72,78],U=[1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0],P=[16,16,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,26,26,27,27,28,28,29,29,64,64];t.exports=function(e,t,r,n,i,s,a,o){var h,u,l,f,c,d,p,m,_,g=o.bits,b=0,v=0,y=0,w=0,k=0,x=0,S=0,z=0,C=0,E=0,A=null,I=0,O=new D.Buf16(16),B=new D.Buf16(16),R=null,T=0;for(b=0;b<=15;b++)O[b]=0;for(v=0;v<n;v++)O[t[r+v]]++;for(k=g,w=15;1<=w&&0===O[w];w--);if(w<k&&(k=w),0===w)return i[s++]=20971520,i[s++]=20971520,o.bits=1,0;for(y=1;y<w&&0===O[y];y++);for(k<y&&(k=y),b=z=1;b<=15;b++)if(z<<=1,(z-=O[b])<0)return-1;if(0<z&&(0===e||1!==w))return-1;for(B[1]=0,b=1;b<15;b++)B[b+1]=B[b]+O[b];for(v=0;v<n;v++)0!==t[r+v]&&(a[B[t[r+v]]++]=v);if(d=0===e?(A=R=a,19):1===e?(A=F,I-=257,R=N,T-=257,256):(A=U,R=P,-1),b=y,c=s,S=v=E=0,l=-1,f=(C=1<<(x=k))-1,1===e&&852<C||2===e&&592<C)return 1;for(;;){for(p=b-S,_=a[v]<d?(m=0,a[v]):a[v]>d?(m=R[T+a[v]],A[I+a[v]]):(m=96,0),h=1<<b-S,y=u=1<<x;i[c+(E>>S)+(u-=h)]=p<<24|m<<16|_|0,0!==u;);for(h=1<<b-1;E&h;)h>>=1;if(0!==h?(E&=h-1,E+=h):E=0,v++,0==--O[b]){if(b===w)break;b=t[r+a[v]]}if(k<b&&(E&f)!==l){for(0===S&&(S=k),c+=y,z=1<<(x=b-S);x+S<w&&!((z-=O[x+S])<=0);)x++,z<<=1;if(C+=1<<x,1===e&&852<C||2===e&&592<C)return 1;i[l=E&f]=k<<24|x<<16|c-s|0}}return 0!==E&&(i[c+E]=b-S<<24|64<<16|0),o.bits=k,0}},{"../utils/common":41}],51:[function(e,t,r){"use strict";t.exports={2:"need dictionary",1:"stream end",0:"","-1":"file error","-2":"stream error","-3":"data error","-4":"insufficient memory","-5":"buffer error","-6":"incompatible version"}},{}],52:[function(e,t,r){"use strict";var i=e("../utils/common"),o=0,h=1;function n(e){for(var t=e.length;0<=--t;)e[t]=0}var s=0,a=29,u=256,l=u+1+a,f=30,c=19,_=2*l+1,g=15,d=16,p=7,m=256,b=16,v=17,y=18,w=[0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0],k=[0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13],x=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,7],S=[16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15],z=new Array(2*(l+2));n(z);var C=new Array(2*f);n(C);var E=new Array(512);n(E);var A=new Array(256);n(A);var I=new Array(a);n(I);var O,B,R,T=new Array(f);function D(e,t,r,n,i){this.static_tree=e,this.extra_bits=t,this.extra_base=r,this.elems=n,this.max_length=i,this.has_stree=e&&e.length}function F(e,t){this.dyn_tree=e,this.max_code=0,this.stat_desc=t}function N(e){return e<256?E[e]:E[256+(e>>>7)]}function U(e,t){e.pending_buf[e.pending++]=255&t,e.pending_buf[e.pending++]=t>>>8&255}function P(e,t,r){e.bi_valid>d-r?(e.bi_buf|=t<<e.bi_valid&65535,U(e,e.bi_buf),e.bi_buf=t>>d-e.bi_valid,e.bi_valid+=r-d):(e.bi_buf|=t<<e.bi_valid&65535,e.bi_valid+=r)}function L(e,t,r){P(e,r[2*t],r[2*t+1])}function j(e,t){for(var r=0;r|=1&e,e>>>=1,r<<=1,0<--t;);return r>>>1}function Z(e,t,r){var n,i,s=new Array(g+1),a=0;for(n=1;n<=g;n++)s[n]=a=a+r[n-1]<<1;for(i=0;i<=t;i++){var o=e[2*i+1];0!==o&&(e[2*i]=j(s[o]++,o))}}function W(e){var t;for(t=0;t<l;t++)e.dyn_ltree[2*t]=0;for(t=0;t<f;t++)e.dyn_dtree[2*t]=0;for(t=0;t<c;t++)e.bl_tree[2*t]=0;e.dyn_ltree[2*m]=1,e.opt_len=e.static_len=0,e.last_lit=e.matches=0}function M(e){8<e.bi_valid?U(e,e.bi_buf):0<e.bi_valid&&(e.pending_buf[e.pending++]=e.bi_buf),e.bi_buf=0,e.bi_valid=0}function H(e,t,r,n){var i=2*t,s=2*r;return e[i]<e[s]||e[i]===e[s]&&n[t]<=n[r]}function G(e,t,r){for(var n=e.heap[r],i=r<<1;i<=e.heap_len&&(i<e.heap_len&&H(t,e.heap[i+1],e.heap[i],e.depth)&&i++,!H(t,n,e.heap[i],e.depth));)e.heap[r]=e.heap[i],r=i,i<<=1;e.heap[r]=n}function K(e,t,r){var n,i,s,a,o=0;if(0!==e.last_lit)for(;n=e.pending_buf[e.d_buf+2*o]<<8|e.pending_buf[e.d_buf+2*o+1],i=e.pending_buf[e.l_buf+o],o++,0===n?L(e,i,t):(L(e,(s=A[i])+u+1,t),0!==(a=w[s])&&P(e,i-=I[s],a),L(e,s=N(--n),r),0!==(a=k[s])&&P(e,n-=T[s],a)),o<e.last_lit;);L(e,m,t)}function Y(e,t){var r,n,i,s=t.dyn_tree,a=t.stat_desc.static_tree,o=t.stat_desc.has_stree,h=t.stat_desc.elems,u=-1;for(e.heap_len=0,e.heap_max=_,r=0;r<h;r++)0!==s[2*r]?(e.heap[++e.heap_len]=u=r,e.depth[r]=0):s[2*r+1]=0;for(;e.heap_len<2;)s[2*(i=e.heap[++e.heap_len]=u<2?++u:0)]=1,e.depth[i]=0,e.opt_len--,o&&(e.static_len-=a[2*i+1]);for(t.max_code=u,r=e.heap_len>>1;1<=r;r--)G(e,s,r);for(i=h;r=e.heap[1],e.heap[1]=e.heap[e.heap_len--],G(e,s,1),n=e.heap[1],e.heap[--e.heap_max]=r,e.heap[--e.heap_max]=n,s[2*i]=s[2*r]+s[2*n],e.depth[i]=(e.depth[r]>=e.depth[n]?e.depth[r]:e.depth[n])+1,s[2*r+1]=s[2*n+1]=i,e.heap[1]=i++,G(e,s,1),2<=e.heap_len;);e.heap[--e.heap_max]=e.heap[1],function(e,t){var r,n,i,s,a,o,h=t.dyn_tree,u=t.max_code,l=t.stat_desc.static_tree,f=t.stat_desc.has_stree,c=t.stat_desc.extra_bits,d=t.stat_desc.extra_base,p=t.stat_desc.max_length,m=0;for(s=0;s<=g;s++)e.bl_count[s]=0;for(h[2*e.heap[e.heap_max]+1]=0,r=e.heap_max+1;r<_;r++)p<(s=h[2*h[2*(n=e.heap[r])+1]+1]+1)&&(s=p,m++),h[2*n+1]=s,u<n||(e.bl_count[s]++,a=0,d<=n&&(a=c[n-d]),o=h[2*n],e.opt_len+=o*(s+a),f&&(e.static_len+=o*(l[2*n+1]+a)));if(0!==m){do{for(s=p-1;0===e.bl_count[s];)s--;e.bl_count[s]--,e.bl_count[s+1]+=2,e.bl_count[p]--,m-=2}while(0<m);for(s=p;0!==s;s--)for(n=e.bl_count[s];0!==n;)u<(i=e.heap[--r])||(h[2*i+1]!==s&&(e.opt_len+=(s-h[2*i+1])*h[2*i],h[2*i+1]=s),n--)}}(e,t),Z(s,u,e.bl_count)}function X(e,t,r){var n,i,s=-1,a=t[1],o=0,h=7,u=4;for(0===a&&(h=138,u=3),t[2*(r+1)+1]=65535,n=0;n<=r;n++)i=a,a=t[2*(n+1)+1],++o<h&&i===a||(o<u?e.bl_tree[2*i]+=o:0!==i?(i!==s&&e.bl_tree[2*i]++,e.bl_tree[2*b]++):o<=10?e.bl_tree[2*v]++:e.bl_tree[2*y]++,s=i,u=(o=0)===a?(h=138,3):i===a?(h=6,3):(h=7,4))}function V(e,t,r){var n,i,s=-1,a=t[1],o=0,h=7,u=4;for(0===a&&(h=138,u=3),n=0;n<=r;n++)if(i=a,a=t[2*(n+1)+1],!(++o<h&&i===a)){if(o<u)for(;L(e,i,e.bl_tree),0!=--o;);else 0!==i?(i!==s&&(L(e,i,e.bl_tree),o--),L(e,b,e.bl_tree),P(e,o-3,2)):o<=10?(L(e,v,e.bl_tree),P(e,o-3,3)):(L(e,y,e.bl_tree),P(e,o-11,7));s=i,u=(o=0)===a?(h=138,3):i===a?(h=6,3):(h=7,4)}}n(T);var q=!1;function J(e,t,r,n){P(e,(s<<1)+(n?1:0),3),function(e,t,r,n){M(e),n&&(U(e,r),U(e,~r)),i.arraySet(e.pending_buf,e.window,t,r,e.pending),e.pending+=r}(e,t,r,!0)}r._tr_init=function(e){q||(function(){var e,t,r,n,i,s=new Array(g+1);for(n=r=0;n<a-1;n++)for(I[n]=r,e=0;e<1<<w[n];e++)A[r++]=n;for(A[r-1]=n,n=i=0;n<16;n++)for(T[n]=i,e=0;e<1<<k[n];e++)E[i++]=n;for(i>>=7;n<f;n++)for(T[n]=i<<7,e=0;e<1<<k[n]-7;e++)E[256+i++]=n;for(t=0;t<=g;t++)s[t]=0;for(e=0;e<=143;)z[2*e+1]=8,e++,s[8]++;for(;e<=255;)z[2*e+1]=9,e++,s[9]++;for(;e<=279;)z[2*e+1]=7,e++,s[7]++;for(;e<=287;)z[2*e+1]=8,e++,s[8]++;for(Z(z,l+1,s),e=0;e<f;e++)C[2*e+1]=5,C[2*e]=j(e,5);O=new D(z,w,u+1,l,g),B=new D(C,k,0,f,g),R=new D(new Array(0),x,0,c,p)}(),q=!0),e.l_desc=new F(e.dyn_ltree,O),e.d_desc=new F(e.dyn_dtree,B),e.bl_desc=new F(e.bl_tree,R),e.bi_buf=0,e.bi_valid=0,W(e)},r._tr_stored_block=J,r._tr_flush_block=function(e,t,r,n){var i,s,a=0;0<e.level?(2===e.strm.data_type&&(e.strm.data_type=function(e){var t,r=4093624447;for(t=0;t<=31;t++,r>>>=1)if(1&r&&0!==e.dyn_ltree[2*t])return o;if(0!==e.dyn_ltree[18]||0!==e.dyn_ltree[20]||0!==e.dyn_ltree[26])return h;for(t=32;t<u;t++)if(0!==e.dyn_ltree[2*t])return h;return o}(e)),Y(e,e.l_desc),Y(e,e.d_desc),a=function(e){var t;for(X(e,e.dyn_ltree,e.l_desc.max_code),X(e,e.dyn_dtree,e.d_desc.max_code),Y(e,e.bl_desc),t=c-1;3<=t&&0===e.bl_tree[2*S[t]+1];t--);return e.opt_len+=3*(t+1)+5+5+4,t}(e),i=e.opt_len+3+7>>>3,(s=e.static_len+3+7>>>3)<=i&&(i=s)):i=s=r+5,r+4<=i&&-1!==t?J(e,t,r,n):4===e.strategy||s===i?(P(e,2+(n?1:0),3),K(e,z,C)):(P(e,4+(n?1:0),3),function(e,t,r,n){var i;for(P(e,t-257,5),P(e,r-1,5),P(e,n-4,4),i=0;i<n;i++)P(e,e.bl_tree[2*S[i]+1],3);V(e,e.dyn_ltree,t-1),V(e,e.dyn_dtree,r-1)}(e,e.l_desc.max_code+1,e.d_desc.max_code+1,a+1),K(e,e.dyn_ltree,e.dyn_dtree)),W(e),n&&M(e)},r._tr_tally=function(e,t,r){return e.pending_buf[e.d_buf+2*e.last_lit]=t>>>8&255,e.pending_buf[e.d_buf+2*e.last_lit+1]=255&t,e.pending_buf[e.l_buf+e.last_lit]=255&r,e.last_lit++,0===t?e.dyn_ltree[2*r]++:(e.matches++,t--,e.dyn_ltree[2*(A[r]+u+1)]++,e.dyn_dtree[2*N(t)]++),e.last_lit===e.lit_bufsize-1},r._tr_align=function(e){P(e,2,3),L(e,m,z),function(e){16===e.bi_valid?(U(e,e.bi_buf),e.bi_buf=0,e.bi_valid=0):8<=e.bi_valid&&(e.pending_buf[e.pending++]=255&e.bi_buf,e.bi_buf>>=8,e.bi_valid-=8)}(e)}},{"../utils/common":41}],53:[function(e,t,r){"use strict";t.exports=function(){this.input=null,this.next_in=0,this.avail_in=0,this.total_in=0,this.output=null,this.next_out=0,this.avail_out=0,this.total_out=0,this.msg="",this.state=null,this.data_type=2,this.adler=0}},{}],54:[function(e,t,r){(function(e){!function(r,n){"use strict";if(!r.setImmediate){var i,s,t,a,o=1,h={},u=!1,l=r.document,e=Object.getPrototypeOf&&Object.getPrototypeOf(r);e=e&&e.setTimeout?e:r,i="[object process]"==={}.toString.call(r.process)?function(e){process.nextTick(function(){c(e)})}:function(){if(r.postMessage&&!r.importScripts){var e=!0,t=r.onmessage;return r.onmessage=function(){e=!1},r.postMessage("","*"),r.onmessage=t,e}}()?(a="setImmediate$"+Math.random()+"$",r.addEventListener?r.addEventListener("message",d,!1):r.attachEvent("onmessage",d),function(e){r.postMessage(a+e,"*")}):r.MessageChannel?((t=new MessageChannel).port1.onmessage=function(e){c(e.data)},function(e){t.port2.postMessage(e)}):l&&"onreadystatechange"in l.createElement("script")?(s=l.documentElement,function(e){var t=l.createElement("script");t.onreadystatechange=function(){c(e),t.onreadystatechange=null,s.removeChild(t),t=null},s.appendChild(t)}):function(e){setTimeout(c,0,e)},e.setImmediate=function(e){"function"!=typeof e&&(e=new Function(""+e));for(var t=new Array(arguments.length-1),r=0;r<t.length;r++)t[r]=arguments[r+1];var n={callback:e,args:t};return h[o]=n,i(o),o++},e.clearImmediate=f}function f(e){delete h[e]}function c(e){if(u)setTimeout(c,0,e);else{var t=h[e];if(t){u=!0;try{!function(e){var t=e.callback,r=e.args;switch(r.length){case 0:t();break;case 1:t(r[0]);break;case 2:t(r[0],r[1]);break;case 3:t(r[0],r[1],r[2]);break;default:t.apply(n,r)}}(t)}finally{f(e),u=!1}}}}function d(e){e.source===r&&"string"==typeof e.data&&0===e.data.indexOf(a)&&c(+e.data.slice(a.length))}}("undefined"==typeof self?void 0===e?this:e:self)}).call(this,"undefined"!=typeof global?global:"undefined"!=typeof self?self:"undefined"!=typeof window?window:{})},{}]},{},[10])(10)});</script>
+<script>/* ============================================================
+   センター長代理週報 抽出コア（UI非依存） v1
+   ------------------------------------------------------------
+   ＳＣＧ週報抽出アプリ v15 のコアを流用し、代理週報（Ｇ～Ｍ列）向けに改訂。
+   ・対象列：Ｇ 会員導入（電話作戦・イベント関係など）～ Ｍ ＯＭＳ、ＴＰＳ、ＨＰ推進活動
+   ・列位置は見出し名で自動判定（見つからない場合は既定の列位置を使用）
+   ・「(2) 税理士名」（未入会への個別提案）も事務所名と同じ扱いで抽出
+   ・項目名のない文章形式の報告は「段落ごと」に分け、文中の事務所名を推定（検出＝文中）
+   ============================================================ */
+(function (root) {
+  'use strict';
+  var OUT_FONT = 'Yu Gothic UI';
+  /* 既定の列位置（見出しで判定できない場合に使用） A=0 */
+  var COL = {
+    datetime: 0, block: 1, center: 2, person: 3, share: 4, roleplay: 5,
+    event: 6, kobetsu: 7, nm: 8, jikei: 9, cloud: 10, fx4: 11, oms: 12,
+    note: 13, doc: 14, respId: 15
+  };
+  var CATEGORIES = [
+    { key: 'event',   col: COL.event,   letter: 'Ｇ', label: '会員導入（電話作戦・イベント関係など）', short: '会員導入（電話・イベント）' },
+    { key: 'kobetsu', col: COL.kobetsu, letter: 'Ｈ', label: '会員導入（未入会への個別提案）', short: '会員導入（未入会個別提案）' },
+    { key: 'nm',      col: COL.nm,      letter: 'Ｉ', label: 'ＮＭ会員フォロー', short: 'ＮＭ会員フォロー' },
+    { key: 'jikei',   col: COL.jikei,   letter: 'Ｊ', label: '自計化推進活動', short: '自計化推進活動' },
+    { key: 'cloud',   col: COL.cloud,   letter: 'Ｋ', label: 'クラウド移行特選事務所への推進活動', short: 'クラウド移行特選事務所' },
+    { key: 'fx4',     col: COL.fx4,     letter: 'Ｌ', label: 'ＦＸ４クラウド推進活動', short: 'ＦＸ４クラウド推進活動' },
+    { key: 'oms',     col: COL.oms,     letter: 'Ｍ', label: 'ＯＭＳ、ＴＰＳ、ＨＰ推進活動', short: 'ＯＭＳ・ＴＰＳ・ＨＰ推進' }
+  ];
+  /* ---------- 文字列ユーティリティ ---------- */
+  function toHalf(s) {
+    return s.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function (c) {
+      return String.fromCharCode(c.charCodeAt(0) - 0xFEE0);
+    });
+  }
+  function normLine(s) {
+    return String(s).replace(/\u3000/g, ' ').replace(/\t/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  var KANA_BASE = 'ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ';
+  var KANA_FULL = 'ヲァィゥェォャュョッーアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン';
+  function kanaToFull(s) {
+    if (!/[ｦ-ﾟ]/.test(s)) return s;
+    s = s.replace(/([ｶ-ﾄﾊ-ﾎｳ])ﾞ/g, function (_, c) {
+      var i = KANA_BASE.indexOf(c);
+      return i < 0 ? c : String.fromCharCode(KANA_FULL.charCodeAt(i) + 1);
+    });
+    s = s.replace(/([ﾊ-ﾎ])ﾟ/g, function (_, c) {
+      var i = KANA_BASE.indexOf(c);
+      return i < 0 ? c : String.fromCharCode(KANA_FULL.charCodeAt(i) + 2);
+    });
+    return s.replace(/[ｦ-ﾝ]/g, function (c) {
+      var i = KANA_BASE.indexOf(c);
+      return i < 0 ? c : KANA_FULL.charAt(i);
+    });
+  }
+
+  var ITAIJI_FROM = '髙﨑濵濱邊邉齋齊藪眞惠嶋嵜栁條淺澤淸綠臺竝舘萬德瀨曻籔桒栢冨拔黑塲來假圀應廣壽龍瀧寶';
+  var ITAIJI_TO = '高崎浜浜辺辺斎斉薮真恵島崎柳条浅沢清緑台並館万徳瀬昇薮桑柏富抜黒場来仮国応広寿竜滝宝';
+  var ITAIJI_RE = new RegExp('[' + ITAIJI_FROM + ']', 'g');
+  var ITAIJI_MAP = (function () {
+    var m = {};
+    for (var i = 0; i < ITAIJI_FROM.length; i++) m[ITAIJI_FROM.charAt(i)] = ITAIJI_TO.charAt(i);
+    return m;
+  })();
+  function foldItaiji(s) {
+    return s.replace(ITAIJI_RE, function (c) { return ITAIJI_MAP[c] || c; });
+  }
+
+  function matchKey(s) {
+    if (!s) return '';
+    var t = String(s);
+    t = kanaToFull(t);
+    t = toHalf(t).toLowerCase();
+    t = foldItaiji(t);
+    t = t.replace(/[\u3000\s]/g, '');
+    t = t.replace(/[()（）「」『』【】\[\]{}・･,.,、。:：;；\-−―ー_'"’”&＆\/／\\]/g, '');
+    return t;
+  }
+
+  /* ---------- 事務所名・税理士名 抽出（SCG週報 v15 を基に拡張） ---------- */
+  var RE_LABEL = /(?:会員事務所名|会員事務所|事務所名|税理士名)/;
+  // 行頭の番号（(1)・１．・①・1) 等）。漢数字・算用数字は区切り記号がある場合のみ番号とみなす（「三谷」「２代目」等の誤除去防止）
+  var RE_NUMHEAD = /^(?:[\(（\[]\s*(?:[0-9０-９]{1,2}|[一二三四五六七八九十]|[①-⑳]|[ⅰ-ⅹ])\s*[\)）\]][.．、:：]?|[①-⑳ⅰ-ⅹ]\s*[\)）\].．、:：]?|[0-9０-９]{1,2}(?:\s*[\)）\].．、:：](?![0-9０-９])|[ \u3000]+)|[一二三四五六七八九十]\s*[\)）\].．、:：])\s*/;
+  var RE_SUFFIX = /(税理士法人|会計事務所|税理士事務所|公認会計士事務所|会計士事務所|税務会計事務所|綜合事務所|総合事務所|経営センター|会計センター|経営参与事務所|パートナーズ|事務所|会計|センター|オフィス)$/;
+  var RE_BADWORD = /(テーマ|ゴール|活動|結果|内容|プロセス|状況|打ち手|反応|スキル|ツール|提案書|共有|今週|来週|次回|所長|職員|目標|実績|ございません|ありません|なし|無し|未定|該当|検討|予定|実施|訪問|面談|前進|停滞|受注|契約|カット|電話作戦|イベント|セミナー|見学会|勉強会|会議|研修)/;
+  var RE_FORMWORD = /^(税理士法人|会計事務所|税理士事務所|公認会計士事務所|会計士事務所|事務所|会計|センター|有限会社|株式会社|合同会社)$/;
+  function cleanName(raw) {
+    var n = normLine(raw);
+    n = n.replace(RE_NUMHEAD, '');
+    n = n.replace(/^[0-9０-９]{1,2}[\/／][0-9０-９]{1,2}\s*(?:[（(][月火水木金土日][）)])?\s*/, '');   // 「10/1(木)」等の日付
+    n = n.replace(/[（(]税[）)]\s*/g, '税理士法人');
+    n = n.replace(/^[\s:：・\-−―]+/, '').replace(/[\s:：・\-−―]+$/, '');
+    // 代理週報：「菅原悠先生（京葉支部）」「藤本大介先生（東大阪支部）（40代）」等の補足カッコを除去
+    n = n.replace(/(先生|様)((?:\s*[（(][^（）()]{0,24}[）)])+)\s*$/, '$1');
+    n = n.replace(/[（(][^）)]{0,24}(?:先生|様|所長|会計士|税理士)[）)]\s*$/, '');
+    n = n.replace(/\s*(?:先生|様|事務所様|御中)$/, '');
+    if (/[／\/]/.test(n)) {
+      var parts = n.split(/[／\/]/).map(function (x) { return x.trim(); }).filter(Boolean);
+      for (var i = parts.length - 1; i >= 0; i--) {
+        if (RE_SUFFIX.test(parts[i])) { n = parts[i]; break; }
+      }
+    }
+    n = n.replace(/^[（(]\s*/, '').replace(/\s*[）)]$/, '');
+    n = n.split('。')[0];
+    var op = (n.match(/[（(]/g) || []).length, cl = (n.match(/[）)]/g) || []).length;
+    if (op > cl) n = n.slice(0, n.search(/[（(]/));
+    n = n.replace(/[（(](?:ＮＭ|NM|ＮＭ会員|NM会員|Ⅲ型|未入会)[）)]\s*$/, '');
+    n = n.replace(/\s*(?:先生|様)$/, '');
+    return n.trim();
+  }
+  function looksLikeName(n) {
+    if (!n) return false;
+    if (n.length < 2 || n.length > 40) return false;
+    if (RE_BADWORD.test(n)) return false;
+    if (RE_FORMWORD.test(n)) return false;     // 「税理士法人」だけ等は名称とみなさない
+    if (/^https?:/i.test(n)) return false;
+    if (/(ます|ました|です|でした|ており|いたし|ございま|思いま|ですが|ため|につい|とのこと)/.test(n)) return false;
+    if (n.length > 26 && !RE_SUFFIX.test(n) && !/(税理士法人|監査法人|会計事務所|税理士事務所|会計士事務所|事務所|会計)/.test(n)) return false;
+    return true;
+  }
+  function splitMultiNames(name) {
+    // ①○○事務所②○○事務所… の形式
+    if (/[①-⑳]/.test(name)) {
+      var p1 = name.split(/[①-⑳]/).map(cleanName).filter(function (x) { return x && looksLikeName(x); });
+      if (p1.length >= 2) return p1;
+    }
+    // 「坂入直樹先生、松平和正先生、小林潤」の形式
+    if (/(?:先生|様)[、,，\s・]+\S/.test(name)) {
+      var p2 = name.split(/(?:先生|様)[、,，\s・]*/).map(cleanName).filter(function (x) { return x && x.length >= 2 && looksLikeName(x); });
+      if (p2.length >= 2) return p2;
+    }
+    if (!/[ 、,／\/]/.test(name)) return [name];
+    var parts = name.split(/[ 、,]+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    if (parts.length < 2) return [name];
+    var ok = parts.every(function (p) {
+      return p.length >= 4 && RE_SUFFIX.test(p) && !RE_FORMWORD.test(p);
+    });
+    return ok ? parts : [name];
+  }
+  var RE_NONE_FULL = new RegExp(
+    '^(?:' +
+      '(?:今週は?|今週の(?:活動|報告事項)?は?|本週は?|当週は?|特に|特段|ご?報告(?:事項)?は?|報告事案は?|特記事項は?|該当(?:案件)?は?|活動は?|実績は?)*' +
+      '\\s*' +
+      '(?:ございません|ございませんでした|ござません|ご座いません|御座いません|ありません|ありませんでした|有りません|無し|なし|無|実施しておりません|実施できておりません|' +
+       'できておりません|できていません|出来ておりません|実施できません|実施せず|未実施)' +
+    ')[。\\.！!]?$'
+  );
+  // 代理週報の記入例（ガイド文）の行
+  var RE_GUIDE_LINE = /^(?:※.*(?:記載|分けて).*|センター長代理がロープレを実施した場合.*|[（(]\s*活用したスキル.*[）)]|契約\s*[／\/]\s*前進\s*[／\/]\s*停滞.*)$/;
+  var RE_GUIDE = /^[（(].{0,60}(?:スキル|ツール|打ち手|顧客の反応|見解|要因|事実).{0,60}[）)]$/;
+  var RE_NONE_TAIL = /(?:ございません|ござません|御座いません|ございませんでした|ありません|ありませんでした|有りません|なし|無し|しておりません|しておりませんでした|できておりません|できていません|出来ておりません|出来ていません|できませんでした|実施せず|未実施)$/;
+  var RE_HEADWORD = /(?:電話作戦|イベント関係(?:[（(][^）)]*[）)])?|その他活動|今週の活動|今週の実施|未入会税理士の反応|今週のロープレテーマ|会員事務所名|会員事務所|事務所名|税理士名|テーマ|活動プロセス|面談前のゴール|活動結果|活動内容|内容)/g;
+  function removeGuides(t) {
+    return String(t == null ? '' : t).replace(/\r\n?/g, '\n').split('\n')
+      .filter(function (l) { return !RE_GUIDE_LINE.test(normLine(l)); }).join('\n');
+  }
+  /* 「今週はございません」等の活動なし判定（項目名・番号・記入例を除いて判定） */
+  function isNoActivity(text) {
+    var lines = String(text).split('\n').map(function (l) {
+      return normLine(l).replace(RE_NUMHEAD, '').replace(/^[①-⑳]\s*/, '');
+    }).filter(function (l) { return l && !RE_GUIDE_LINE.test(l) && !RE_GUIDE.test(l); });
+    var flat = lines.join('').replace(RE_HEADWORD, '')
+      .replace(/[\s\u3000:：、，,。．.！!（）()「」・\-－―]/g, '');
+    if (!flat) return true;
+    if (/^上記.{0,10}(?:通り|とおり|記載|参照|同様)/.test(flat)) return true;
+    if (flat.length > 40) return false;
+    if (/(?:会計|事務所|法人|先生|様|ＳＣＧ|scg|受注|内諾|契約|アポ|https?)/i.test(flat)) return false;
+    return RE_NONE_TAIL.test(flat) || RE_NONE_FULL.test(flat);
+  }
+  function extractByLabel(text) {
+    var lines = String(text).split('\n');
+    var out = [], pos = 0, offsets = [];
+    for (var i = 0; i < lines.length; i++) { offsets.push(pos); pos += lines[i].length + 1; }
+    for (var li = 0; li < lines.length; li++) {
+      var raw = normLine(lines[li]);
+      var m = raw.match(RE_LABEL);
+      if (!m) continue;
+      // 「(2) 会員事務所名」のような項目行のみを対象（本文中の「事務所名」は対象外）
+      var before = raw.slice(0, raw.indexOf(m[0])).replace(RE_NUMHEAD, '').trim();
+      if (before.length > 4) continue;
+      var rest = raw.slice(raw.indexOf(m[0]) + m[0].length);
+      // 「会員事務所からの…」のような文章中の語は項目名とみなさない
+      if (rest && !/^[\s:：（(）)①-⑳]/.test(rest)) continue;
+      rest = rest.replace(/^\s*[①-⑳0-9０-９]+\s*/, '').replace(/^[\s:：]+/, '');
+      var cand = cleanName(rest);
+      if (looksLikeName(cand)) {
+        splitMultiNames(cand).forEach(function (nm) { out.push({ name: nm, idx: offsets[li], tier: 1 }); });
+        continue;
+      }
+      for (var j = li + 1; j < Math.min(li + 4, lines.length); j++) {
+        var nx = normLine(lines[j]);
+        if (!nx) continue;
+        if (RE_LABEL.test(nx)) break;
+        if (RE_ITEMLINE.test(lines[j]) && RE_ANYLABEL.test(normLine(lines[j]).replace(RE_NUMHEAD, ''))) break;
+        var c2 = cleanName(nx);
+        if (looksLikeName(c2)) {
+          (function (off) {
+            splitMultiNames(c2).forEach(function (nm) { out.push({ name: nm, idx: off, tier: 1 }); });
+          })(offsets[li]);
+        }
+        break;
+      }
+    }
+    return out;
+  }
+  /* 行全体が事務所名、または「○○先生（地域）」だけの行 */
+  var RE_SENSEI_LINE = /^([^\s、。，,：:「」]{2,14}?)(?:先生|様)(?:\s*[（(][^）)]{0,24}[）)])*\s*$/;
+  function extractByShape(text) {
+    var lines = String(text).split('\n');
+    var out = [], pos = 0;
+    for (var i = 0; i < lines.length; i++) {
+      var off = pos; pos += lines[i].length + 1;
+      var raw = normLine(lines[i]);
+      if (!raw || raw.length > 46) continue;
+      var body = raw.replace(RE_NUMHEAD, '').replace(/^[①-⑳]\s*/, '').replace(/^[1-9１-９][\)）]\s*/, '');
+      var sm = body.match(RE_SENSEI_LINE);
+      if (sm) {
+        var nm0 = cleanName(sm[1]);
+        if (looksLikeName(nm0) && nm0.length <= 12) { out.push({ name: nm0, idx: off, tier: 2 }); continue; }
+      }
+      var c = cleanName(raw);
+      if (!looksLikeName(c)) continue;
+      if (!RE_SUFFIX.test(c)) continue;
+      // 折り返された文章の行（「を控え、…他事務所」等）を名称と誤認しない
+      if (/[、。，,]/.test(c)) continue;
+      if (/[ぁ-ん]/.test(c) && !isKanaName(c)) continue;
+      if (/^(?:税理士法人|会計事務所|税理士事務所|事務所|会計)$/.test(c)) continue;
+      splitMultiNames(c).forEach(function (nm) { out.push({ name: nm, idx: off, tier: 2 }); });
+    }
+    return out;
+  }
+  function isKanaName(c) {
+    var runs = c.match(/[ぁ-ん]+/g) || [];
+    return runs.every(function (r) { return r.length <= 6 && !/[のがをにへでとはもやて]/.test(r); });
+  }
+  function extractByGazetteer(text, gazList) {
+    var out = [], seen = {};
+    var flat = joinWrapped(text);
+    for (var i = 0; i < gazList.length; i++) {
+      var g = gazList[i];
+      if (g.length < 3) continue;
+      var at = flat.indexOf(g);
+      if (at >= 0 && !seen[g]) { seen[g] = 1; out.push({ name: g, idx: at, tier: 3 }); }
+    }
+    return out;
+  }
+  /* ---------- 文章中の事務所名推定（代理週報用・新規） ---------- */
+  // 折り返し改行を除去して１行に（「Ｙ会計か\nら移行」→「Ｙ会計から移行」）
+  function joinWrapped(t) { return String(t).replace(/\r?\n[ \t\u3000]*/g, ''); }
+  var NM_CH = '[一-龥々〆ヵヶァ-ヴーｦ-ﾟ・Ａ-Ｚａ-ｚ０-９A-Za-z0-9＆&]';
+  var SUF_SRC = '(?:税理士法人|公認会計士事務所|会計士事務所|税理士事務所|税務会計事務所|会計事務所|総合事務所|綜合事務所|会計社|会計)';
+  var RE_PROSE_PREFIXED = new RegExp('税理士法人((?:[ぁ-ん]{2,6})?' + NM_CH + '{2,16})', 'g');
+  var RE_PROSE_KANA = new RegExp('(^|[\\s、。，,（(「『【：:）)／/｜])([ぁ-ん]{1,6}' + NM_CH + '{0,12}' + SUF_SRC + ')', 'g');
+  var RE_PROSE_SUFFIX = new RegExp('(' + NM_CH + '{1,14})(' + SUF_SRC + ')', 'g');
+  var RE_PROSE_SUF_END = new RegExp(SUF_SRC + '$');
+  var RE_STOP_PREFIX = /^(?:管理|財務|税務|企業|発展|クラウド|弥生|公益法人|公益|月次|自計化|社福|ＴＫＣ|ＴＫＣ方式|ＴＫＣ会員|中小|中小企業|個人|法人|事業|経営|戦略|農業|医療|一般|新|旧|当|他|各|同|本|会員|未入会|新入会|老舗|対象|重点|特選|担当|関与先|地域|全|未来|事務所|他社|自社|顧問先|会社|株式|有限|公認|監査|大手|地元|若手|その他|会員事務所|ＮＭ|国際|日本|全国|ＳＡ版|ＦＸ|ＰＸ|クラウド版|スタンドアロン版|勘定奉行|奉行|ＭＦ|マネーフォワード|システム|記帳|記帳代行|税理士|公認会計士|会計士|ＳＣＧ|ＮＳＧ|大型|小規模|中堅|複数|一人|ひとり|共同|業務|適正|書面添付|翌月|巡回|監査担当|職員)$/i;
+  var RE_STOP_TAIL = /^(?:関与先|化|設立|成り|成|名|格|登録|移行|組織|全体|内|側|所属|勤務|代表|社員|向け|向|様|側面|間)/;
+  function extractProse(text) {
+    var flat = joinWrapped(text), found = [], m;
+    function add(name, idx) {
+      name = name.replace(/(?:様|御中|さん)$/, '').replace(/[・]+$/, '');
+      if (name.length < 4 || name.length > 30) return;
+      found.push({ name: name, idx: idx, tier: 4 });
+    }
+    RE_PROSE_PREFIXED.lastIndex = 0;
+    while ((m = RE_PROSE_PREFIXED.exec(flat))) {
+      var tail = m[1];
+      var kana1 = (tail.match(/^[ぁ-ん]+/) || [''])[0];
+      if (kana1 && (/^[にでとのがをへはもやよか]/.test(kana1) || /(?:の|が|を|に|へ|と|で|は|も|や|か|より|から|まで|て)$/.test(kana1))) continue;
+      if (RE_STOP_TAIL.test(tail)) continue;
+      if (/^(?:ＴＫＣ|TKC)$/i.test(tail)) continue;
+      add('税理士法人' + tail, m.index);
+    }
+    RE_PROSE_KANA.lastIndex = 0;
+    while ((m = RE_PROSE_KANA.exec(flat))) {
+      var nmk = m[2];
+      var kana = nmk.match(/^[ぁ-ん]+/)[0];
+      if (/(?:の|が|を|に|へ|と|で|は|も|や|か|より|から|まで|て)$/.test(kana)) { RE_PROSE_KANA.lastIndex = m.index + m[0].length; continue; }
+      var pre = nmk.replace(RE_PROSE_SUF_END, '');
+      if (RE_STOP_PREFIX.test(pre)) continue;
+      add(nmk, m.index + m[1].length);
+    }
+    RE_PROSE_SUFFIX.lastIndex = 0;
+    while ((m = RE_PROSE_SUFFIX.exec(flat))) {
+      var pre2 = m[1];
+      // 「國實サブチーフ…」などの人名＋役職が前に付いた場合は除外
+      pre2 = pre2.replace(/^.*(?:ＳＣＧ|SCG|チーフ|サブチーフ|センター長|代理|リーダ|リーダー|課長|次長|部長|推進担当|委員長|支部長|会長)/, '');
+      if (pre2.length < 2 && !(pre2.length === 1 && /^[一-龥]$/.test(pre2) && /^(?:会計事務所|税理士事務所|税理士法人|会計社)$/.test(m[2]))) continue;
+      if (RE_STOP_PREFIX.test(pre2)) continue;
+      if (/^(?:ＴＫＣ|TKC|Ｙ|Ｊ|Ｍ|Ｉ|Ｅ|Ｐ)/.test(pre2) && pre2.length <= 3) continue;
+      if (/^税理士法/.test(pre2)) continue;  // 「税理士法人○○」側で拾う
+      add(pre2 + m[2], m.index + (m[1].length - pre2.length));
+    }
+    // 重複・包含関係の整理（長い方を残す）
+    var keys = found.map(function (f) { return matchKey(f.name); });
+    var out = [], seen = {};
+    found.forEach(function (f, i) {
+      var k = keys[i];
+      if (!k || seen[k]) return;
+      for (var j = 0; j < keys.length; j++) {
+        if (j !== i && keys[j] !== k && keys[j].indexOf(k) >= 0) return;
+      }
+      seen[k] = 1;
+      out.push(f);
+    });
+    return out.sort(function (a, b) { return a.idx - b.idx; });
+  }
+  var RE_FIRSTNUM = /^[\(（\[]?\s*(?:[1１]|①|一|ⅰ)\s*[\)）\].．、:：]/;
+  var RE_BLOCKHEAD = /^(?:テーマ|活動プロセス|【|■|◆|●|＜|<)/;
+  function blockStart(text, prevIdx, curIdx) {
+    var lines = String(text).split('\n'), pos = 0, firstNum = -1, headLine = -1;
+    for (var i = 0; i < lines.length; i++) {
+      var off = pos; pos += lines[i].length + 1;
+      if (off <= prevIdx) continue;
+      if (off > curIdx) break;
+      var raw = normLine(lines[i]);
+      if (!raw) continue;
+      if (RE_FIRSTNUM.test(raw)) firstNum = off;
+      else if (RE_BLOCKHEAD.test(raw.replace(RE_NUMHEAD, '')) && /^(?:テーマ|活動プロセス)/.test(raw.replace(RE_NUMHEAD, '')) ) { if (headLine < 0 || headLine < firstNum) headLine = off; }
+      else if (RE_BLOCKHEAD.test(raw) && /^[【■◆●＜<]/.test(raw)) { if (headLine < 0) headLine = off; }
+    }
+    if (firstNum >= 0) return firstNum;
+    if (headLine >= 0) return headLine;
+    return curIdx;
+  }
+  var RE_BLOCKLABEL = /^(?:テーマ|活動プロセス|会員事務所名|会員事務所|事務所名|税理士名|面談前のゴール)/;
+  var RE_BODYHEAD = /(活動内容|支援内容|活動状況|活動の内容|今週の活動成果|取組内容|面談内容|実施内容|推進内容)/;
+  function splitActivityBlocks(text) {
+    var lines = String(text).split('\n'), cuts = [], pos = 0, seenBody = false;
+    for (var i = 0; i < lines.length; i++) {
+      var off = pos; pos += lines[i].length + 1;
+      var raw = normLine(lines[i]);
+      if (!raw) continue;
+      if (RE_FIRSTNUM.test(raw) && RE_BLOCKLABEL.test(raw.replace(RE_NUMHEAD, ''))) {
+        if (seenBody) cuts.push(off);
+        seenBody = false;
+        continue;
+      }
+      if (RE_BODYHEAD.test(raw.replace(RE_NUMHEAD, '').slice(0, 12))) seenBody = true;
+    }
+    if (!cuts.length) return [text];
+    var out = [], st = 0;
+    cuts.forEach(function (c) { var t = text.slice(st, c); if (t.trim()) out.push(t); st = c; });
+    if (text.slice(st).trim()) out.push(text.slice(st));
+    return out;
+  }
+  /* 項目名のない番号付き書式に項目名を補う（区分ごとに書式が異なる）
+     ・同じ番号の並びに、すでに項目名付きの行が１つ以上ある場合のみ補う（文章の箇条書きを誤変換しない） */
+  var RE_ITEMLINE = /^([ \u3000\t]*)[\(（]\s*([1-9１-９])\s*[\)）]\s*(.*)$/;
+  var RE_ANYLABEL = /^(?:テーマ|活動プロセス|会員事務所名|会員事務所|事務所名|税理士名|面談前のゴール|今回の面談で想定していたゴール|想定していたゴール|ゴール|活動結果|結果|活動内容|支援内容|活動状況|活動の内容|取組内容|面談内容|実施内容|推進内容)/;
+  var SCHEMAS = {
+    office: { 5: ['テーマ', '会員事務所名', '面談前のゴール', '活動結果', '活動内容'], 4: ['会員事務所名', '面談前のゴール', '活動結果', '活動内容'] },
+    person: { 5: ['活動プロセス', '税理士名', '面談前のゴール', '活動結果', '活動内容'], 4: ['税理士名', '面談前のゴール', '活動結果', '活動内容'] }
+  };
+  function labelUnlabeled(text, catKey) {
+    if (catKey === 'event') return text;    // Ｇ列（電話作戦・イベント）は自由記述のため補わない
+    var sc = catKey === 'kobetsu' ? SCHEMAS.person : SCHEMAS.office;
+    var lines = String(text).replace(/\r\n?/g, '\n').split('\n');
+    var items = [];
+    lines.forEach(function (ln, i) {
+      var m = ln.match(RE_ITEMLINE);
+      if (m) items.push({ i: i, n: +toHalf(m[2]), rest: m[3] });
+    });
+    if (!items.length) return text;
+    var runs = [], cur = null;
+    items.forEach(function (it) {
+      if (it.n === 1 || !cur) { cur = []; runs.push(cur); }
+      cur.push(it);
+    });
+    var changed = false;
+    runs.forEach(function (run) {
+      var max = 0, labeled = 0;
+      run.forEach(function (it) {
+        if (it.n > max) max = it.n;
+        if (RE_ANYLABEL.test(normLine(it.rest))) labeled++;
+      });
+      var schema = max >= 5 ? sc[5] : (max === 4 ? sc[4] : null);
+      if (!schema) return;
+      if (!labeled) {
+        // 項目名が１つも無い場合は、名称欄にあたる番号の行が「名称らしい」ときだけ補う（文章の箇条書きの誤変換防止）
+        var nameNo = schema.indexOf(catKey === 'kobetsu' ? '税理士名' : '会員事務所名') + 1;
+        var it2 = run.filter(function (x) { return x.n === nameNo; })[0];
+        var nm2 = it2 ? cleanName(it2.rest) : '';
+        if (!it2 || !nm2 || nm2.length > 30 || !looksLikeName(nm2)) return;
+      }
+      run.forEach(function (it) {
+        var rest = normLine(it.rest);
+        if (RE_ANYLABEL.test(rest)) return;
+        var lab = schema[it.n - 1];
+        if (!lab) return;
+        lines[it.i] = '(' + it.n + ') ' + lab + '：' + it.rest.replace(/^[\s\u3000]+/, '');
+        changed = true;
+      });
+    });
+    return changed ? lines.join('\n') : text;
+  }
+  function isStructured(text) {
+    var cnt = 0;
+    String(text).split('\n').forEach(function (l) {
+      var m = l.match(RE_ITEMLINE);
+      if (m && RE_ANYLABEL.test(normLine(m[3]))) cnt++;
+    });
+    return cnt >= 2;
+  }
+  // 活動内容のスペース（全角・半角・タブ）を削除
+  function stripSpaces(t) { return String(t || '').replace(/[ \u3000\t\u00a0]+/g, ''); }
+  function splitByOffices(text, hits) {
+    if (!hits.length) return [{ office: '', body: text }];
+    var uniq = [], seenIdx = {};
+    hits.slice().sort(function (a, b) { return a.idx - b.idx; }).forEach(function (h) {
+      if (seenIdx[h.idx] != null) {
+        var last = uniq[uniq.length - 1];
+        if (last && last.idx === h.idx && last.names.indexOf(h.name) < 0) last.names.push(h.name);
+        return;
+      }
+      seenIdx[h.idx] = 1;
+      if (uniq.length && uniq[uniq.length - 1].name === h.name &&
+          blockStart(text, uniq[uniq.length - 1].idx, h.idx) === h.idx) return;
+      uniq.push({ name: h.name, names: [h.name], idx: h.idx, tier: h.tier });
+    });
+    var starts = [0];
+    for (var b = 1; b < uniq.length; b++) starts.push(blockStart(text, uniq[b - 1].idx, uniq[b].idx));
+    var segs = [];
+    for (var i = 0; i < uniq.length; i++) {
+      var start = starts[i];
+      var end = (i + 1 < uniq.length) ? starts[i + 1] : text.length;
+      segs.push({ names: uniq[i].names, tier: uniq[i].tier, body: text.slice(start, end).trim() });
+    }
+    return segs;
+  }
+  /* 文章形式：トップレベルの番号（(1)・１．・【】・Ⅰ 等）で段落に分ける */
+  var RE_TOPNUM = /^[ \u3000]?(?:[\(（]\s*[0-9０-９]{1,2}\s*[\)）]|[0-9０-９]{1,2}\s*[．.](?![0-9０-９])|【|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ][\s．.　])/;
+  function splitParagraphs(text) {
+    var lines = String(text).split('\n'), out = [], cur = [];
+    lines.forEach(function (l) {
+      if (RE_TOPNUM.test(l) && cur.join('').trim()) { out.push(cur.join('\n')); cur = []; }
+      cur.push(l);
+    });
+    if (cur.join('').trim()) out.push(cur.join('\n'));
+    return out;
+  }
+  function paragraphTitle(pg) {
+    var first = normLine(String(pg).split('\n')[0] || '');
+    if (!RE_TOPNUM.test(first) && !/^[①-⑳]/.test(first)) return '';
+    var t = first.replace(RE_NUMHEAD, '').replace(/^[【\s]+|[】\s]+$/g, '');
+    return t.length <= 40 ? t : '';
+  }
+  /* 文章内で「行全体が名称」の行で区切る（前置き部分は「未特定」として残す） */
+  function splitAtLines(text, hits) {
+    var uniq = [], seen = {};
+    hits.slice().sort(function (a, b) { return a.idx - b.idx; }).forEach(function (h) {
+      if (seen[h.idx] != null) { uniq[seen[h.idx]].names.push(h.name); return; }
+      seen[h.idx] = uniq.length;
+      uniq.push({ idx: h.idx, names: [h.name], tier: h.tier });
+    });
+    var segs = [];
+    var pre = text.slice(0, uniq[0].idx);
+    if (pre.trim() && !isNoActivity(pre) && stripSpaces(pre).replace(RE_HEADWORD, '').length >= 8) {
+      segs.push({ names: [], tier: 0, body: pre.trim() });
+    }
+    for (var i = 0; i < uniq.length; i++) {
+      var end = i + 1 < uniq.length ? uniq[i + 1].idx : text.length;
+      segs.push({ names: uniq[i].names, tier: uniq[i].tier, body: text.slice(uniq[i].idx, end).trim() });
+    }
+    return segs;
+  }
+  function pickField(body, labels) {
+    var lines = String(body).split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var raw = normLine(lines[i]);
+      for (var k = 0; k < labels.length; k++) {
+        var L = labels[k];
+        var at = raw.indexOf(L);
+        if (at < 0) continue;
+        if (raw.slice(0, at).replace(RE_NUMHEAD, '').trim().length > 2) continue;
+        var rest = raw.slice(at + L.length).replace(/^[\s:：）)]*/, '');
+        rest = rest.replace(/^[（(][^）)]*[）)]\s*/, '');
+        if (rest && !/^\d/.test(rest)) return rest.slice(0, 60);
+        for (var j = i + 1; j < Math.min(i + 3, lines.length); j++) {
+          var nx = normLine(lines[j]);
+          if (!nx) continue;
+          if (RE_ITEMLINE.test(lines[j])) break;
+          if (RE_NUMHEAD.test(nx) && nx.replace(RE_NUMHEAD, '').length === 0) continue;
+          var v = nx.replace(RE_NUMHEAD, '').trim();
+          return v.slice(0, 60);
+        }
+      }
+    }
+    return '';
+  }
+  var RE_DROPHEAD = /(会員事務所名|会員事務所|事務所名|税理士名|テーマ|活動プロセス|面談前のゴール|今回の面談で想定していたゴール|想定していたゴール|ゴール|活動結果|結果)/;
+  function pickBody(segBody, officeName) {
+    var lines = String(segBody).replace(/\r\n/g, '\n').split('\n');
+    var start = -1;
+    for (var i = 0; i < lines.length; i++) {
+      var raw = normLine(lines[i]);
+      if (!raw) continue;
+      var after = raw.replace(RE_NUMHEAD, '');
+      var m = after.match(RE_BODYHEAD);
+      if (!m || after.indexOf(m[0]) > 2) continue;   // 行頭の項目名のみ
+      var tail = after.slice(after.indexOf(m[0]) + m[0].length).replace(/^[\s:：]+/, '');
+      tail = tail.replace(/^[（(][^）)]*[）)]\s*/, '');
+      if (tail) { start = i; lines[i] = tail; }
+      else { start = i + 1; }
+      break;
+    }
+    var out;
+    if (start >= 0) {
+      out = lines.slice(start);
+    } else {
+      out = [];
+      var skipValue = false;
+      for (var j = 0; j < lines.length; j++) {
+        var r = normLine(lines[j]);
+        if (!r) { skipValue = false; out.push(lines[j]); continue; }
+        var head = r.replace(RE_NUMHEAD, '');
+        var isHead = RE_DROPHEAD.test(head) && head.replace(RE_DROPHEAD, '').replace(/^[\s:：]+/, '').length === 0;
+        if (isHead) { skipValue = true; continue; }
+        if (RE_DROPHEAD.test(head) && head.length <= 40 && /^(会員事務所名|会員事務所|事務所名|税理士名|テーマ|活動プロセス|面談前のゴール|ゴール|活動結果)/.test(head)) {
+          skipValue = false; continue;
+        }
+        if (skipValue) { skipValue = false; continue; }
+        out.push(lines[j]);
+      }
+    }
+    var okey = matchKey(officeName || '');
+    while (out.length) {
+      var f = normLine(out[0]);
+      if (!f) { out.shift(); continue; }
+      if (okey && matchKey(f.replace(RE_NUMHEAD, '')) === okey) { out.shift(); continue; }
+      if (RE_GUIDE.test(f)) { out.shift(); continue; }
+      break;
+    }
+    while (out.length && !normLine(out[out.length - 1])) out.pop();
+    return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  /* ---------- 日時 ---------- */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  function dateOnly(text) {
+    var s = String(text == null ? '' : text).trim();
+    if (!s) return '';
+    var m = s.match(/^(\d{4})([-\/\.年])(\d{1,2})([-\/\.月])(\d{1,2})/);
+    if (m) {
+      var sep1 = m[2] === '年' ? '-' : m[2];
+      var sep2 = m[4] === '月' ? '-' : m[4];
+      return m[1] + sep1 + pad(+m[3]) + sep2 + pad(+m[5]);
+    }
+    return s.split(/[ T]/)[0];
+  }
+
+  function normalizeDateCell(v) {
+    if (v == null || v === '') return { text: '', dateText: '', date: null };
+    if (v instanceof Date) {
+      var t1 = v.getFullYear() + '-' + pad(v.getMonth() + 1) + '-' + pad(v.getDate()) + ' ' +
+        pad(v.getHours()) + ':' + pad(v.getMinutes()) + ':' + pad(v.getSeconds());
+      return { text: t1, dateText: dateOnly(t1), date: v };
+    }
+    if (typeof v === 'number') {
+      var whole = Math.floor(v), frac = v - whole;
+      var ms = (whole - 25569) * 86400000 + Math.round(frac * 86400) * 1000;
+      var d = new Date(ms);
+      var text = d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()) + ' ' +
+        pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds());
+      var local = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
+        d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds());
+      return { text: text, dateText: dateOnly(text), date: local };
+    }
+    var s = String(v).trim();
+    var m2 = s.replace(/\//g, '-').match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+    var dt = m2 ? new Date(+m2[1], +m2[2] - 1, +m2[3], +(m2[4] || 0), +(m2[5] || 0), +(m2[6] || 0)) : null;
+    if (dt && isNaN(dt.getTime())) dt = null;
+    return { text: s, dateText: dateOnly(s), date: dt };
+  }
+
+  /* ---------- 見出しから列位置を判定 ---------- */
+  function headerMap(header) {
+    var keys = (header || []).map(function (h) { return matchKey(h == null ? '' : String(h)); });
+    function find(label, fb) {
+      var k = matchKey(label), i;
+      for (i = 0; i < keys.length; i++) if (keys[i] && keys[i] === k) return i;
+      for (i = 0; i < keys.length; i++) if (keys[i] && keys[i].indexOf(k) >= 0) return i;
+      return fb;
+    }
+    var m = {
+      datetime: find('日時', COL.datetime), block: find('統括センター', COL.block),
+      center: find('センター名', COL.center), person: find('氏名', COL.person),
+      doc: find('提案書', COL.doc), respId: find('応答ＩＤ', COL.respId), cats: {}, found: {}
+    };
+    CATEGORIES.forEach(function (c) {
+      var idx = find(c.label, -1);
+      m.found[c.key] = idx >= 0;
+      m.cats[c.key] = idx >= 0 ? idx : c.col;
+    });
+    return m;
+  }
+  /* ---------- レコード化 ---------- */
+  function buildRecords(sheets) {
+    var pass1 = [];
+    var gaz = Object.create(null);
+    sheets.forEach(function (sh) {
+      var rows = sh.rows;
+      var hm = headerMap(rows[0]);
+      for (var r = 1; r < rows.length; r++) {
+        var row = rows[r] || [];
+        if (!row[hm.datetime] && !row[hm.person]) continue;
+        var dtc = normalizeDateCell(row[hm.datetime]);
+        var base = {
+          file: sh.fileName, rowNo: r + 1,
+          dt: dtc.date, dtText: dtc.text, dateText: dtc.dateText,
+          block: String(row[hm.block] || ''),
+          center: String(row[hm.center] || ''),
+          person: String(row[hm.person] || ''),
+          doc: String(row[hm.doc] || '').trim(),
+          respId: String(row[hm.respId] || '')
+        };
+        CATEGORIES.forEach(function (cat) {
+          var v = row[hm.cats[cat.key]];
+          if (v == null || !String(v).trim()) return;
+          var orig = String(v);
+          var text = labelUnlabeled(removeGuides(orig), cat.key);
+          if (isNoActivity(text)) return;
+          var hits = extractByLabel(text);
+          if (!hits.length) hits = extractByShape(text);
+          hits.forEach(function (h) { gaz[h.name] = (gaz[h.name] || 0) + 1; });
+          pass1.push({ base: base, cat: cat, text: text, orig: orig });
+        });
+      }
+    });
+    var gazList = Object.keys(gaz).filter(function (k) { return k.length >= 3; })
+      .sort(function (a, b) { return b.length - a.length; });
+    var records = [];
+    pass1.forEach(function (item) {
+      var segs = [];
+      splitActivityBlocks(item.text).forEach(function (blk) {
+        // ① 項目名（会員事務所名／税理士名）がある書式
+        var hits = extractByLabel(blk);
+        if (hits.length) {
+          splitByOffices(blk, hits).forEach(function (sg) { sg.mode = 'label'; segs.push(sg); });
+          return;
+        }
+        // ② 項目名付きだが名称欄が空欄の書式 → ブロック全体を１件として扱う
+        if (isStructured(blk)) {
+          var sh0 = extractByShape(blk);
+          if (sh0.length) { splitByOffices(blk, sh0).forEach(function (sg) { sg.mode = 'label'; segs.push(sg); }); return; }
+          var bodyOnly = pickBody(blk, '');     // 項目名の行を除いた本文から推定
+          var pz = extractProse(bodyOnly);
+          if (!pz.length) pz = extractByGazetteer(bodyOnly, gazList);
+          segs.push({ names: pz.map(function (x) { return x.name; }), tier: pz.length ? pz[0].tier : 0, body: blk.trim(), mode: 'label' });
+          return;
+        }
+        // ③ 文章形式 → 段落ごとに分けて事務所名を推定
+        splitParagraphs(blk).forEach(function (pg) {
+          if (isNoActivity(pg)) return;
+          var pgLines = pg.split('\n').filter(function (l) { return normLine(l); });
+          // 見出しだけの段落（例：「(1)リード獲得」）は除外
+          if (pgLines.length === 1 && normLine(pgLines[0]).replace(RE_NUMHEAD, '').length <= 20 &&
+              !extractByShape(pg).length) return;
+          var title = paragraphTitle(pg);
+          var sh = extractByShape(pg);
+          if (sh.length) {
+            splitAtLines(pg, sh).forEach(function (sg) {
+              if (isNoActivity(sg.body)) return;
+              sg.mode = 'prose'; sg.title = title; segs.push(sg);
+            });
+            return;
+          }
+          var pn = extractProse(pg);
+          if (!pn.length) pn = extractByGazetteer(pg, gazList);
+          segs.push({ names: pn.map(function (x) { return x.name; }), tier: pn.length ? pn[0].tier : 0, body: pg.trim(), mode: 'prose', title: title });
+        });
+      });
+      var cellKey = matchKey(item.text);
+      segs.forEach(function (sg, si) {
+        var names = (sg.names || []).filter(Boolean);
+        var office = names.join('、');
+        var keys = [];
+        names.forEach(function (n) {
+          keys.push(matchKey(n));
+          n.split(/[、,，／\/]/).forEach(function (p) { var k = matchKey(p); if (k && keys.indexOf(k) < 0) keys.push(k); });
+        });
+        var isLabel = sg.mode === 'label';
+        var body = isLabel ? pickBody(sg.body, office) : sg.body;
+        if (!isLabel) {
+          // 段落先頭の見出し行（「(1) 電話作戦」等）は区分欄に移し、本文からは除く
+          var ls = body.split('\n');
+          if (sg.title && ls.length > 1 && normLine(ls[0]).replace(RE_NUMHEAD, '').replace(/^[【\s]+|[】\s]+$/g, '') === sg.title) ls.shift();
+          body = ls.join('\n').trim();
+        }
+        records.push({
+          file: item.base.file, rowNo: item.base.rowNo,
+          dt: item.base.dt, dtText: item.base.dtText, dateText: item.base.dateText,
+          block: item.base.block, center: item.base.center, person: item.base.person,
+          doc: item.base.doc, respId: item.base.respId,
+          catKey: item.cat.key, catLabel: item.cat.label, catShort: item.cat.short,
+          office: office || '（事務所名未特定）',
+          officeNames: names,
+          officeKey: matchKey(office),
+          officeKeys: keys,
+          tier: names.length ? (sg.tier || 0) : 0,
+          segIdx: si,
+          theme: isLabel ? pickField(sg.body, ['テーマ', '活動プロセス']) :
+            ((sg.title && !names.some(function (n) { return matchKey(sg.title).indexOf(matchKey(n)) >= 0; })) ? sg.title : ''),
+          goal: isLabel ? pickField(sg.body, ['面談前のゴール', '今回の面談で想定していたゴール', 'ゴール']) : '',
+          result: isLabel ? pickField(sg.body, ['活動結果']) : '',
+          body: stripSpaces(body),
+          raw: sg.body,
+          cell: item.orig,
+          cellKey: cellKey
+        });
+      });
+    });
+    records.sort(function (a, b) {
+      var ta = a.dt ? a.dt.getTime() : 0, tb = b.dt ? b.dt.getTime() : 0;
+      if (ta !== tb) return ta - tb;
+      if (a.rowNo !== b.rowNo) return a.rowNo - b.rowNo;
+      return a.segIdx - b.segIdx;
+    });
+    // 同一人物の再提出（同じ区分・同じ事務所・同じ本文）は最新の１件のみ残す
+    var seenDup = {}, dupCount = 0, kept = [];
+    for (var i = records.length - 1; i >= 0; i--) {
+      var rr = records[i];
+      var dk = matchKey(rr.person) + '|' + rr.catKey + '|' + rr.officeKey + '|' + matchKey(rr.body).slice(0, 300);
+      if (seenDup[dk]) { dupCount++; continue; }
+      seenDup[dk] = 1;
+      kept.push(rr);
+    }
+    kept.reverse();
+    // 画面の「事務所名一覧」用（確定した名称のみ）
+    var gazAll = Object.create(null);
+    kept.forEach(function (r) { if (r.tier) r.officeNames.forEach(function (n) { gazAll[n] = (gazAll[n] || 0) + 1; }); });
+    return { records: kept, gaz: gazAll, dupCount: dupCount };
+  }
+  /* ---------- XLSX 読込 ---------- */
+  function colToIndex(ref) {
+    var m = ref.match(/^([A-Z]+)/); if (!m) return 0;
+    var s = m[1], n = 0;
+    for (var i = 0; i < s.length; i++) n = n * 26 + (s.charCodeAt(i) - 64);
+    return n - 1;
+  }
+  function decodeXmlEntities(s) {
+    return s.replace(/&(amp|lt|gt|quot|apos|#x?[0-9a-fA-F]+);/g, function (_, e) {
+      switch (e) {
+        case 'amp': return '&'; case 'lt': return '<'; case 'gt': return '>';
+        case 'quot': return '"'; case 'apos': return "'";
+      }
+      if (e[0] === '#') {
+        return e[1] === 'x' ? String.fromCodePoint(parseInt(e.slice(2), 16))
+          : String.fromCodePoint(parseInt(e.slice(1), 10));
+      }
+      return _;
+    });
+  }
+  /* ふりがな（rPh）を本文として拾わない */
+  function sstText(siXml) {
+    var xml = String(siXml)
+      .replace(/<rPh[\s\S]*?<\/rPh>/g, '')
+      .replace(/<rPh[^>]*\/>/g, '')
+      .replace(/<phoneticPr[^>]*\/?>/g, '');
+    var out = '', re = /<t[^>]*>([\s\S]*?)<\/t>/g, m;
+    while ((m = re.exec(xml))) out += decodeXmlEntities(m[1]);
+    return out;
+  }
+
+  function readXlsx(arrayBuffer, fileName, JSZipRef) {
+    return JSZipRef.loadAsync(arrayBuffer).then(function (zip) {
+      return zip.file('xl/workbook.xml').async('string').then(function (wbXml) {
+        var relFile = zip.file('xl/_rels/workbook.xml.rels');
+        return (relFile ? relFile.async('string') : Promise.resolve('')).then(function (relXml) {
+          var rels = {}, rm, rre = /<Relationship\b([^>]*)\/?>/g;
+          while ((rm = rre.exec(relXml))) {
+            var id = (rm[1].match(/\bId="([^"]+)"/) || [])[1];
+            var tg = (rm[1].match(/\bTarget="([^"]+)"/) || [])[1];
+            if (id && tg) rels[id] = decodeXmlEntities(tg);
+          }
+          var sheets = [], sm, sre = /<sheet\b([^>]*)\/?>/g;
+          while ((sm = sre.exec(wbXml))) {
+            var nm0 = (sm[1].match(/\bname="([^"]*)"/) || [])[1];
+            var rid0 = (sm[1].match(/r:id="([^"]+)"/) || [])[1];
+            if (nm0 != null && rid0) sheets.push({ name: decodeXmlEntities(nm0), rid: rid0 });
+          }
+          var sstFile = zip.file('xl/sharedStrings.xml');
+          return (sstFile ? sstFile.async('string') : Promise.resolve('')).then(function (sstXml) {
+            var sst = [];
+            if (sstXml) {
+              var re = /<si>([\s\S]*?)<\/si>/g, m;
+              while ((m = re.exec(sstXml))) sst.push(sstText(m[1]));
+            }
+            var tasks = sheets.map(function (s) {
+              var target = rels[s.rid] || '';
+              var path = target.charAt(0) === '/' ? target.slice(1) : ('xl/' + target.replace(/^\.?\//, ''));
+              var f = zip.file(path);
+              if (!f) return Promise.resolve(null);
+              return f.async('string').then(function (xml) {
+                return { fileName: fileName, sheetName: s.name, rows: parseSheetXml(xml, sst) };
+              });
+            });
+            return Promise.all(tasks).then(function (res) { return res.filter(Boolean); });
+          });
+        });
+      });
+    });
+  }
+
+  function parseSheetXml(xml, sst) {
+    var rows = [];
+    var rowRe = /<row[^>]*r="(\d+)"[^>]*>([\s\S]*?)<\/row>/g, rm;
+    while ((rm = rowRe.exec(xml))) {
+      var rIdx = parseInt(rm[1], 10) - 1;
+      var cells = [];
+      var cRe = /<c([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g, cm;
+      while ((cm = cRe.exec(rm[2]))) {
+        var attrs = cm[1] || '', inner = cm[2] || '';
+        var refM = attrs.match(/r="([A-Z]+\d+)"/);
+        var ci = refM ? colToIndex(refM[1]) : cells.length;
+        var t = (attrs.match(/t="([^"]+)"/) || [])[1] || 'n';
+        var val = null;
+        if (t === 's') {
+          var vm = inner.match(/<v>([\s\S]*?)<\/v>/);
+          if (vm) val = sst[parseInt(vm[1], 10)] != null ? sst[parseInt(vm[1], 10)] : '';
+        } else if (t === 'inlineStr') {
+          val = sstText(inner);
+        } else if (t === 'str') {
+          var sm2 = inner.match(/<v>([\s\S]*?)<\/v>/);
+          val = sm2 ? decodeXmlEntities(sm2[1]) : '';
+        } else {
+          var nm2 = inner.match(/<v>([\s\S]*?)<\/v>/);
+          if (nm2) { var num = parseFloat(nm2[1]); val = isNaN(num) ? nm2[1] : num; }
+        }
+        cells[ci] = val;
+      }
+      rows[rIdx] = cells;
+    }
+    for (var i = 0; i < rows.length; i++) if (!rows[i]) rows[i] = [];
+    return rows;
+  }
+
+  /* ---------- XLSX 書出 ---------- */
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function colName(n) {
+    var s = ''; n = n + 1;
+    while (n > 0) { var r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); }
+    return s;
+  }
+
+  function writeXlsx(sheetName, aoa, widths, JSZipRef) {
+    var cols = '';
+    if (widths && widths.length) {
+      cols = '<cols>' + widths.map(function (w, i) {
+        return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>';
+      }).join('') + '</cols>';
+    }
+    var rowsXml = aoa.map(function (row, ri) {
+      var cells = row.map(function (cell, ci) {
+        var ref = colName(ci) + (ri + 1);
+        var style = ri === 0 ? ' s="1"' : ' s="2"';
+        if (cell && typeof cell === 'object' && cell.f) {
+          return '<c r="' + ref + '"' + style + ' t="str"><f>' + esc(cell.f) + '</f><v>' + esc(cell.v || '') + '</v></c>';
+        }
+        var v = cell == null ? '' : String(cell);
+        if (v === '') return '<c r="' + ref + '"' + style + '/>';
+        return '<c r="' + ref + '"' + style + ' t="inlineStr"><is><t xml:space="preserve">' + esc(v) + '</t></is></c>';
+      }).join('');
+      return '<row r="' + (ri + 1) + '">' + cells + '</row>';
+    }).join('');
+
+    var sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' +
+      cols + '<sheetData>' + rowsXml + '</sheetData>' +
+      '<autoFilter ref="A1:' + colName(aoa[0].length - 1) + aoa.length + '"/></worksheet>';
+
+    var styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<fonts count="2">' +
+      '<font><sz val="10"/><color theme="1"/><name val="' + esc(OUT_FONT) + '"/><family val="3"/><charset val="128"/><scheme val="none"/></font>' +
+      '<font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="' + esc(OUT_FONT) + '"/><family val="3"/><charset val="128"/><scheme val="none"/></font>' +
+      '</fonts>' +
+      '<fills count="3"><fill><patternFill patternType="none"/></fill>' +
+      '<fill><patternFill patternType="gray125"/></fill>' +
+      '<fill><patternFill patternType="solid"><fgColor rgb="FF2F5597"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+      '<borders count="2"><border/><border><left style="thin"><color rgb="FFBFBFBF"/></left>' +
+      '<right style="thin"><color rgb="FFBFBFBF"/></right><top style="thin"><color rgb="FFBFBFBF"/></top>' +
+      '<bottom style="thin"><color rgb="FFBFBFBF"/></bottom></border></borders>' +
+      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+      '<cellXfs count="3">' +
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+      '<xf numFmtId="49" fontId="1" fillId="2" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center" wrapText="1"/></xf>' +
+      '<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
+      '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+
+    var zip = new JSZipRef();
+    zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+      '</Types>');
+    zip.folder('_rels').file('.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+      '</Relationships>');
+    var xl = zip.folder('xl');
+    xl.file('workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+      'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+      '<sheets><sheet name="' + esc(sheetName).slice(0, 31) + '" sheetId="1" r:id="rId1"/></sheets></workbook>');
+    xl.folder('_rels').file('workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+      '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+      '</Relationships>');
+    xl.file('styles.xml', styles);
+    xl.folder('worksheets').file('sheet1.xml', sheetXml);
+    return zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+  }
+
+  root.ProxyCore = {
+    OUT_FONT: OUT_FONT, COL: COL, CATEGORIES: CATEGORIES,
+    toHalf: toHalf, normLine: normLine, matchKey: matchKey,
+    kanaToFull: kanaToFull, foldItaiji: foldItaiji,
+    cleanName: cleanName, isNoActivity: isNoActivity, pickBody: pickBody,
+    extractByLabel: extractByLabel, extractByShape: extractByShape,
+    extractByGazetteer: extractByGazetteer, extractProse: extractProse,
+    headerMap: headerMap,
+    normalizeDateCell: normalizeDateCell, dateOnly: dateOnly,
+    buildRecords: buildRecords, readXlsx: readXlsx, writeXlsx: writeXlsx, parseSheetXml: parseSheetXml
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>/* ============================================================
+   センター長代理週報 事務所別 活動抽出アプリ  UI  v1
+   （ＳＣＧ週報抽出アプリ v15 のUIを流用）
+   ============================================================ */
+(function () {
+  'use strict';
+  var C = window.ProxyCore;
+  /* v2：Ｈ（未入会への個別提案）の活動プロセス */
+  var PROCS = [
+    { key: 'lead',  label: 'リード獲得',   re: /リード獲得|Ｋ１|K1/i },
+    { key: 'kadai', label: '課題把握',     re: /課題把握|Ｋ２|K2/i },
+    { key: 'teian', label: '提案活動',     re: /提案活動|Ｋ３|K3/i },
+    { key: 'rissho',label: '立証活動',     re: /立証活動|Ｋ４|K4/i },
+    { key: 'close', label: 'クローズ活動', re: /クローズ|Ｋ５|K5/i },
+    { key: 'other', label: 'その他・未記入' }
+  ];
+  function procKeys(r) {
+    if (r.catKey !== 'kobetsu') return [];
+    var t = String(r.theme || '');
+    var ks = PROCS.filter(function (p) { return p.re && p.re.test(t); }).map(function (p) { return p.key; });
+    return ks.length ? ks : ['other'];
+  }
+  var $ = function (id) { return document.getElementById(id); };
+  var DEFAULT_CENTER = '神戸';
+  var LS_KEY = 'proxy_result_col_widths_v1';
+
+
+  /* ---------- 結果表の列定義（既定幅 px） ---------- */
+  var DEFAULT_W = { date: 96, hit: 58, center: 86, scg: 96, cat: 190, office: 200, theme: 152, body: 440, doc: 72 };
+  var COLS = [
+    { key: 'date', label: '日付', min: 62 },
+    { key: 'hit', label: '検出', min: 46 },
+    { key: 'center', label: 'センター', min: 60 },
+    { key: 'scg', label: '代理（氏名）', min: 64 },
+    { key: 'cat', label: '区分', min: 72 },
+    { key: 'office', label: '会員事務所名／税理士名', min: 72 },
+    { key: 'theme', label: 'テーマ／結果', min: 72 },
+    { key: 'body', label: '活動内容（クリックで全文）', min: 140 },
+    { key: 'doc', label: '提案書', min: 52 }
+  ];
+  COLS.forEach(function (c) { c.w = DEFAULT_W[c.key]; });
+
+  var state = {
+    files: [], records: [], gaz: {}, filtered: [],
+    centers: [], masterCenters: [], minText: '', maxText: '', centerInitialized: false
+  };
+
+  function log(msg, cls) {
+    var el = document.createElement('div');
+    el.className = 'log-line ' + (cls || '');
+    el.textContent = msg;
+    $('log').appendChild(el);
+    $('log').scrollTop = $('log').scrollHeight;
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function toInputDate(txt) {
+    var m = String(txt || '').replace(/\//g, '-').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (!m) return '';
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return m[1] + '-' + p(+m[2]) + '-' + p(+m[3]);
+  }
+  function normCenter(s) {
+    return String(s == null ? '' : s).replace(/[\s\u3000]/g, '');
+  }
+
+  /* ============================================================
+     ★列幅の管理
+     ============================================================ */
+  function loadWidths() {
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      var saved = JSON.parse(raw);
+      COLS.forEach(function (c) {
+        var v = saved[c.key];
+        if (typeof v === 'number' && v >= c.min && v <= 1400) c.w = v;
+      });
+    } catch (e) { /* 保存領域が使えない環境では既定値のまま */ }
+  }
+  function saveWidths() {
+    try {
+      var o = {};
+      COLS.forEach(function (c) { o[c.key] = c.w; });
+      localStorage.setItem(LS_KEY, JSON.stringify(o));
+    } catch (e) { /* 失敗しても機能は継続 */ }
+  }
+  function applyWidths() {
+    var cg = $('colgroup-res');
+    if (!cg) return;
+    var cs = cg.children;
+    for (var i = 0; i < COLS.length && i < cs.length; i++) {
+      cs[i].style.width = COLS[i].w + 'px';
+    }
+    $('tbl-res').style.width = COLS.reduce(function (a, c) { return a + c.w; }, 0) + 'px';
+  }
+  function renderHead() {
+    $('colgroup-res').innerHTML = COLS.map(function () { return '<col>'; }).join('');
+    $('thead-res').innerHTML = '<tr>' + COLS.map(function (c, i) {
+      return '<th><span class="thlabel">' + escapeHtml(c.label) + '</span>' +
+        '<span class="resizer" data-ci="' + i + '" title="ドラッグで幅を調整／ダブルクリックで自動調整"></span></th>';
+    }).join('') + '</tr>';
+    applyWidths();
+  }
+
+  /* 内容に合わせた自動調整（表示中の行から実測） */
+  function autoFit(ci) {
+    var col = COLS[ci];
+    var meas = $('measure');
+    var rows = $('tbody').rows;
+    meas.innerHTML = '';
+    meas.textContent = col.label;
+    var max = meas.offsetWidth + 18;   // 見出しはリサイザ分を加算
+    var lim = Math.min(rows.length, 300);
+    for (var r = 0; r < lim; r++) {
+      var td = rows[r].cells[ci];
+      if (!td) continue;
+      meas.innerHTML = td.innerHTML;
+      var w = meas.offsetWidth;
+      if (w > max) max = w;
+    }
+    meas.innerHTML = '';
+    col.w = Math.max(col.min, Math.min(max + 22, 700));
+    applyWidths();
+    saveWidths();
+  }
+  function autoFitAll() {
+    if (!$('tbody').rows.length) { alert('先に検索を実行してください。'); return; }
+    for (var i = 0; i < COLS.length; i++) autoFit(i);
+    log('○ すべての列幅を内容に合わせて調整しました。', 'ok');
+  }
+  function resetWidths() {
+    COLS.forEach(function (c) { c.w = DEFAULT_W[c.key]; });
+    applyWidths();
+    saveWidths();
+    log('○ 列幅を既定値に戻しました。', 'ok');
+  }
+
+  function initResizer() {
+    var drag = null;
+    $('thead-res').addEventListener('mousedown', function (e) {
+      var rz = e.target.closest ? e.target.closest('.resizer') : null;
+      if (!rz) return;
+      e.preventDefault();
+      var ci = +rz.getAttribute('data-ci');
+      drag = { ci: ci, x: e.clientX, w0: COLS[ci].w };
+      document.body.classList.add('col-resizing');
+    });
+    document.addEventListener('mousemove', function (e) {
+      if (!drag) return;
+      var col = COLS[drag.ci];
+      col.w = Math.max(col.min, Math.min(drag.w0 + (e.clientX - drag.x), 1400));
+      applyWidths();
+    });
+    document.addEventListener('mouseup', function () {
+      if (!drag) return;
+      drag = null;
+      document.body.classList.remove('col-resizing');
+      saveWidths();
+    });
+    $('thead-res').addEventListener('dblclick', function (e) {
+      var rz = e.target.closest ? e.target.closest('.resizer') : null;
+      if (!rz) return;
+      e.preventDefault();
+      autoFit(+rz.getAttribute('data-ci'));
+    });
+  }
+
+  /* ---------- 取込 ---------- */
+  function handleFiles(fileList) {
+    var files = Array.prototype.slice.call(fileList).filter(function (f) {
+      return /\.xlsx$/i.test(f.name);
+    });
+    if (!files.length) { log('※ .xlsx ファイルが見つかりません（.xls / .csv は非対応）', 'err'); return; }
+    $('busy').style.display = 'flex';
+    var chain = Promise.resolve();
+    files.forEach(function (f) {
+      chain = chain.then(function () {
+        if (state.files.some(function (x) { return x.name === f.name && x.size === f.size; })) {
+          log('… 取込済みのため除外：' + f.name, 'warn');
+          return;
+        }
+        return f.arrayBuffer().then(function (buf) {
+          return C.readXlsx(buf, f.name, window.JSZip).then(function (sheets) {
+            var target = sheets.filter(function (s) {
+              var h = s.rows[0] || [];
+              return String(h[0] || '').indexOf('日時') >= 0 && s.rows.length > 1;
+            });
+            if (!target.length) { log('× 週報形式のシートが見つかりません：' + f.name, 'err'); return; }
+            var ms = sheets.filter(function (s) { return /マスタ|ﾏｽﾀ|master/i.test(s.sheetName); })[0];
+            if (ms) {
+              ms.rows.forEach(function (r) {
+                var v = normCenter(r[0]);
+                if (v && state.masterCenters.indexOf(v) < 0) state.masterCenters.push(v);
+              });
+            }
+            var cnt = target.reduce(function (a, s) { return a + s.rows.slice(1).filter(function (r) { return r && (r[0] || r[3]); }).length; }, 0);
+            state.files.push({ name: f.name, size: f.size, sheets: target, rows: cnt });
+            log('○ 取込：' + f.name + '（' + target.map(function (s) { return s.sheetName; }).join('・') + ' / ' + cnt + '行）', 'ok');
+          });
+        });
+      });
+    });
+    chain.then(rebuild).catch(function (e) {
+      log('× エラー：' + (e && e.message ? e.message : e), 'err');
+    }).then(function () { $('busy').style.display = 'none'; });
+  }
+
+  function rebuild() {
+    var sheets = [], seen = {};
+    state.files.forEach(function (f) {
+      f.sheets.forEach(function (s) {
+        var rows = [s.rows[0]];
+        var hm = C.headerMap(s.rows[0]);
+        for (var i = 1; i < s.rows.length; i++) {
+          var r = s.rows[i] || [];
+          var key = [r[hm.respId], r[hm.datetime], r[hm.person], r[hm.center]].join('|');
+          if (key !== '|||' && seen[key]) continue;
+          seen[key] = 1;
+          rows.push(r);
+        }
+        sheets.push({ fileName: f.name, sheetName: s.sheetName, rows: rows });
+      });
+    });
+    var res = C.buildRecords(sheets);
+    state.records = res.records;
+    state.gaz = res.gaz;
+    if (res.dupCount && state.files.length) log('○ 同じ代理の再提出で内容が同一の活動 ' + res.dupCount + ' 件は、最新の１件のみ残しました。', 'ok');
+    state.records.forEach(function (r) {
+      r.centerN = normCenter(r.center);
+      r.personKey = C.matchKey(r.person);          // ★v10：氏名の照合キー
+      r.procKeys = procKeys(r);                    // v2：活動プロセス
+    });
+
+    var withDt = state.records.filter(function (r) { return r.dtText; });
+    state.minText = withDt.length ? withDt[0].dtText : '';
+    state.maxText = withDt.length ? withDt[withDt.length - 1].dtText : '';
+
+    var cmap = {}, offices = {};
+    state.records.forEach(function (r) {
+      if (r.centerN) cmap[r.centerN] = (cmap[r.centerN] || 0) + 1;
+      if (r.tier) r.officeNames.forEach(function (n) { offices[n] = 1; });
+    });
+    state.centers = Object.keys(cmap).sort(function (a, b) { return a.localeCompare(b, 'ja'); });
+    renderCenterOptions(cmap);
+
+    var un = state.records.filter(function (r) { return !r.tier; }).length;
+    $('sum-files').textContent = state.files.length;
+    $('sum-rows').textContent = state.records.length.toLocaleString();
+    $('sum-offices').textContent = Object.keys(offices).length.toLocaleString();
+    $('sum-period').textContent = state.minText
+      ? (toInputDate(state.minText) + ' 〜 ' + toInputDate(state.maxText)) : '－';
+    $('sum-unknown').textContent = un.toLocaleString() + '件（' +
+      (state.records.length ? (100 * un / state.records.length).toFixed(1) : '0') + '%）';
+    $('summary').style.display = state.files.length ? 'grid' : 'none';
+    $('filelist').innerHTML = state.files.map(function (f, i) {
+      return '<span class="chip">' + escapeHtml(f.name) + ' <b data-del="' + i + '" title="取消">×</b></span>';
+    }).join('');
+    if (state.minText) {
+      if (!$('date-from').value) $('date-from').value = toInputDate(state.minText);
+      if (!$('date-to').value) $('date-to').value = toInputDate(state.maxText);
+    }
+    renderGazList();
+    renderScgList();
+    updateScgHint();
+    renderProcList();
+  }
+  function renderProcList() {
+    var cnt = {};
+    state.records.forEach(function (r) { (r.procKeys || []).forEach(function (k) { cnt[k] = (cnt[k] || 0) + 1; }); });
+    var prev = {};
+    PROCS.forEach(function (p) { var el = $('proc-' + p.key); prev[p.key] = el ? el.checked : true; });
+    $('proc-list').innerHTML = PROCS.map(function (p) {
+      return '<label class="opt"><input type="checkbox" class="proc-cb" id="proc-' + p.key + '"' + (prev[p.key] ? ' checked' : '') + '>' +
+        escapeHtml(p.label) + '<span class="sub">（' + (cnt[p.key] || 0) + '）</span></label>';
+    }).join('');
+    $('proc-all').checked = PROCS.every(function (p) { return $('proc-' + p.key).checked; });
+  }
+  function renderCenterOptions(cmap) {
+    var sel = $('center'), prev = sel.value;
+    var mc = state.masterCenters;
+    var known = [], unknown = [];
+    state.centers.forEach(function (c) {
+      if (!mc.length || mc.indexOf(c) >= 0) known.push(c); else unknown.push(c);
+    });
+    var html = '<option value="">すべてのセンター</option>';
+    known.forEach(function (c) {
+      html += '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '（' + cmap[c] + '）</option>';
+    });
+    if (unknown.length) {
+      html += '<optgroup label="⚠ マスタに無い表記（誤記・列ズレの可能性）">';
+      unknown.forEach(function (c) {
+        html += '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '（' + cmap[c] + '）</option>';
+      });
+      html += '</optgroup>';
+    }
+    sel.innerHTML = html;
+    if (!state.centerInitialized) {
+      sel.value = state.centers.indexOf(DEFAULT_CENTER) >= 0 ? DEFAULT_CENTER : '';
+      if (state.centers.length) state.centerInitialized = true;
+      if (state.centers.length && sel.value !== DEFAULT_CENTER) {
+        log('※ 「' + DEFAULT_CENTER + '」が取込データに無いため、センターは「すべて」を初期選択にしました。', 'warn');
+      }
+    } else if (prev && state.centers.indexOf(prev) >= 0) {
+      sel.value = prev;
+    }
+    if (unknown.length) {
+      log('⚠ センター名がマスタと一致しない表記が ' + unknown.length + ' 種あります（' +
+        unknown.slice(0, 6).join('・') + (unknown.length > 6 ? ' ほか' : '') +
+        '）。該当データはセンター絞り込みから漏れます。', 'warn');
+    }
+  }
+
+  function renderGazList() {
+    var q = C.matchKey($('gaz-filter').value || '');
+    var center = $('center').value;
+    var gaz = state.gaz;
+    if (center) {
+      gaz = {};
+      state.records.forEach(function (r) {
+        if (r.centerN === center && r.tier) r.officeNames.forEach(function (n) { gaz[n] = (gaz[n] || 0) + 1; });
+      });
+    }
+    var arr = Object.keys(gaz).map(function (k) { return [k, gaz[k]]; })
+      .filter(function (x) { return !q || C.matchKey(x[0]).indexOf(q) >= 0; })
+      .sort(function (a, b) { return b[1] - a[1]; });
+    $('gaz-count').textContent = arr.length.toLocaleString() + ' 件' + (center ? '（' + center + '）' : '');
+    $('gaz-list').innerHTML = arr.slice(0, 400).map(function (x) {
+      return '<span class="gaz" data-name="' + escapeHtml(x[0]) + '">' + escapeHtml(x[0]) + '<i>' + x[1] + '</i></span>';
+    }).join('') + (arr.length > 400 ? '<span class="more">…ほか ' + (arr.length - 400) + ' 件（絞り込んでください）</span>' : '');
+  }
+
+  /* ============================================================
+     ★v10：ＳＣＧ（氏名）一覧・入力ヒント
+     ============================================================ */
+  function scgMap() {
+    var center = $('center').value;
+    var m = {};
+    state.records.forEach(function (r) {
+      if (!r.person) return;
+      if (center && r.centerN !== center) return;
+      m[r.person] = (m[r.person] || 0) + 1;
+    });
+    return m;
+  }
+  function renderScgList() {
+    if (!$('scg-list')) return;
+    var m = scgMap();
+    var arr = Object.keys(m).map(function (k) { return [k, m[k]]; })
+      .sort(function (a, b) { return b[1] - a[1]; });
+    var center = $('center').value;
+    $('scg-count').textContent = arr.length.toLocaleString() + ' 名' + (center ? '（' + center + '）' : '（全センター）');
+    $('scg-list').innerHTML = arr.slice(0, 400).map(function (x) {
+      return '<span class="scg" data-scg="' + escapeHtml(x[0]) + '">' + escapeHtml(x[0]) + '<i>' + x[1] + '</i></span>';
+    }).join('') + (arr.length > 400 ? '<span class="more">…ほか ' + (arr.length - 400) + ' 名</span>' : '');
+  }
+  /* 入力中の氏名が何名に該当するかを即時表示 */
+  function updateScgHint() {
+    var el = $('scg-hint');
+    if (!el) return;
+    var raw = $('scg').value.trim();
+    if (!raw || !state.records.length) {
+      el.innerHTML = '代理週報Ｄ列（氏名）で絞り込みます。姓のみの入力でも可（例：山本）。';
+      el.className = 'note';
+      return;
+    }
+    var key = C.matchKey(raw);
+    var exact = $('scg-exact').checked;
+    var m = scgMap(), hit = [];
+    Object.keys(m).forEach(function (n) {
+      var k = C.matchKey(n);
+      if (exact ? k === key : k.indexOf(key) >= 0) hit.push(n);
+    });
+    if (!hit.length) {
+      el.innerHTML = '⚠ 該当する代理が見つかりません。表記や選択中のセンターをご確認ください。';
+      el.className = 'note warn2';
+    } else if (hit.length === 1) {
+      el.innerHTML = '✔ <b>' + escapeHtml(hit[0]) + '</b>（' + m[hit[0]] + '件）に一致します。';
+      el.className = 'note';
+    } else {
+      el.innerHTML = '該当 <b>' + hit.length + '</b> 名：' + hit.slice(0, 6).map(escapeHtml).join('・') +
+        (hit.length > 6 ? ' ほか' : '');
+      el.className = 'note';
+    }
+  }
+
+  /* ---------- 共通：条件判定 ---------- */
+  function ymd(r) {
+    var m = String(r.dtText || '').replace(/\//g, '-').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (!m) return null;
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return m[1] + p(+m[2]) + p(+m[3]);
+  }
+  function currentScope() {
+    var center = $('center').value;
+    var scgRaw = $('scg').value.trim();
+    var scgKey = C.matchKey(scgRaw);
+    var scgExact = $('scg-exact').checked;
+    var cats = C.CATEGORIES.filter(function (c) { return $('cat-' + c.key).checked; }).map(function (c) { return c.key; });
+    var useRange = $('period-range').checked;
+    var from = useRange && $('date-from').value ? $('date-from').value.replace(/-/g, '') : null;
+    var to = useRange && $('date-to').value ? $('date-to').value.replace(/-/g, '') : null;
+    /* ★v10：ＳＣＧ（氏名）での絞り込み */
+    function passScg(r) {
+      if (!scgKey) return true;
+      if (scgExact) return r.personKey === scgKey;
+      return r.personKey.indexOf(scgKey) >= 0;
+    }
+    var procSel = PROCS.filter(function (p) { var el = $('proc-' + p.key); return !el || el.checked; }).map(function (p) { return p.key; });
+    var procAll = procSel.length === PROCS.length;
+    function passProc(r) {
+      if (procAll || r.catKey !== 'kobetsu') return true;
+      return (r.procKeys || []).some(function (k) { return procSel.indexOf(k) >= 0; });
+    }
+    function passNoCenter(r) {
+      if (cats.indexOf(r.catKey) < 0) return false;
+      if (!passProc(r)) return false;
+      if (!passScg(r)) return false;
+      if (from || to) {
+        var d = ymd(r);
+        if (!d) return false;
+        if (from && d < from) return false;
+        if (to && d > to) return false;
+      }
+      return true;
+    }
+    return {
+      procSel: procSel, procAll: procAll,
+      center: center, cats: cats, scgRaw: scgRaw, scgKey: scgKey, scgExact: scgExact,
+      passScg: passScg, passNoCenter: passNoCenter,
+      pass: function (r) {
+        if (!passNoCenter(r)) return false;
+        if (center && r.centerN !== center) return false;
+        return true;
+      }
+    };
+  }
+
+  /* ---------- 検索 ---------- */
+  function doSearch() {
+    if (!state.records.length) { alert('先に週報Excelを取り込んでください。'); return; }
+    var nameRaw = $('office').value.trim();
+    var exact = $('mode-exact').checked;
+    var incBody = $('inc-body').checked;
+    var sc = currentScope();
+    if (!sc.cats.length) { alert('出力する内容を1つ以上選択してください。'); return; }
+    if (!sc.procSel.length && sc.cats.indexOf('kobetsu') >= 0) { alert('Ｈの活動プロセスを1つ以上選択してください。'); return; }
+    var key = C.matchKey(nameRaw);
+
+    function nameMatch(r) {
+      if (!key) return true;
+      var ks = r.officeKeys && r.officeKeys.length ? r.officeKeys : [r.officeKey];
+      for (var i = 0; i < ks.length; i++) {
+        if (!ks[i]) continue;
+        if (exact ? ks[i] === key : ks[i].indexOf(key) >= 0) return true;
+      }
+      return false;
+    }
+
+    var byName = state.records.filter(function (r) { return sc.pass(r) && nameMatch(r); });
+    byName.forEach(function (r) { r.hitBy = 'name'; });
+
+    var result = byName, extra = 0;
+
+    if (key && incBody) {
+      var taken = {};
+      byName.forEach(function (r) { taken[r.file + '|' + r.rowNo + '|' + r.catKey] = 1; });
+      var added = {};
+      state.records.forEach(function (r) {
+        if (!sc.pass(r)) return;
+        var k = r.file + '|' + r.rowNo + '|' + r.catKey;
+        if (taken[k] || added[k]) return;
+        if (r.cellKey.indexOf(key) < 0) return;
+        r.hitBy = 'body';
+        added[k] = 1;
+        result = result.concat([r]);
+        extra++;
+      });
+      result.sort(function (a, b) {
+        var ta = a.dt ? a.dt.getTime() : 0, tb = b.dt ? b.dt.getTime() : 0;
+        if (ta !== tb) return ta - tb;
+        if (a.rowNo !== b.rowNo) return a.rowNo - b.rowNo;
+        return a.segIdx - b.segIdx;
+      });
+    }
+
+    // 活動内容が１行しかないものの除外（代理週報では文章が１行で書かれた報告も多いため、既定はOFF）
+    var before1 = result.length;
+    if ($('opt-oneline').checked) result = result.filter(function (r) { return countLines(r) >= 2; });
+    state.oneLineExcluded = before1 - result.length;
+
+    state.filtered = result;
+
+    var cellsContaining = 0, otherCenters = {};
+    if (key) {
+      var seenCell = {};
+      state.records.forEach(function (r) {
+        if (sc.pass(r)) {
+          var k = r.file + '|' + r.rowNo + '|' + r.catKey;
+          if (!seenCell[k] && r.cellKey.indexOf(key) >= 0) { seenCell[k] = 1; cellsContaining++; }
+        }
+        if (sc.center && sc.passNoCenter(r) && r.centerN !== sc.center && r.cellKey.indexOf(key) >= 0) {
+          otherCenters[r.centerN] = (otherCenters[r.centerN] || 0) + 1;
+        }
+      });
+    }
+    renderResults(nameRaw, key, exact, sc, cellsContaining, extra, otherCenters);
+  }
+
+  function displayText(r) {
+    return String(r.hitBy === 'body' ? (r.cell || r.raw || '') : (r.body || r.raw || '')).replace(/[ \u3000\t\u00a0]+/g, '');
+  }
+  // v15：「１行」の判定は、表示用に整形した活動内容ではなく、週報に書かれた活動ブロック全体（項目名を含む原文）の行数で行う
+  //       （v12〜v14は整形後の活動内容で判定していたため、「(5)活動内容：～」のように１段落で書かれた正規の報告まで除外していた）
+  function countLines(r) {
+    var src = r.hitBy === 'body' ? (r.cell || r.raw || '') : (r.raw || r.cell || '');
+    return String(src).split(/\r\n|\r|\n/).filter(function (x) { return x.replace(/[\s\u3000]/g, '') !== ''; }).length;
+  }
+  var fullAll = false;
+  function applyFullAll() {
+    var list = document.querySelectorAll('#tbody .clamp');
+    for (var i = 0; i < list.length; i++) list[i].classList.toggle('open', fullAll);
+    $('btn-fullall').textContent = fullAll ? '全文を折りたたむ' : '全文表示';
+  }
+
+  function renderResults(nameRaw, key, exact, sc, cellsContaining, extra, otherCenters) {
+    var center = sc.center;
+    var out = state.filtered;
+    $('result-card').style.display = 'block';
+    var byCat = {}, offices = {};
+    out.forEach(function (r) { byCat[r.catShort] = (byCat[r.catShort] || 0) + 1; (r.officeNames.length ? r.officeNames : [r.office]).forEach(function (n) { offices[n] = 1; }); });
+
+    $('res-count').textContent = out.length.toLocaleString();
+    $('res-detail').innerHTML =
+      'センター：<b>' + escapeHtml(center || 'すべて') + '</b>' +
+      '　／　代理：<b>' + (sc.scgRaw ? escapeHtml(sc.scgRaw) + '（' + (sc.scgExact ? '完全一致' : '部分一致') + '）' : 'すべて') + '</b>' +
+      '　／　対象（事務所名／税理士名）：<b>' + (nameRaw ? escapeHtml(nameRaw) + '（' + (exact ? '完全一致' : '部分一致') + '）' : 'すべて') + '</b>' +
+      '　／　該当する事務所・税理士の数：<b>' + Object.keys(offices).length + '</b>' +
+      (sc.procAll || sc.cats.indexOf('kobetsu') < 0 ? '' : '　／　Ｈの活動プロセス：<b>' + PROCS.filter(function (p) { return sc.procSel.indexOf(p.key) >= 0; }).map(function (p) { return escapeHtml(p.label); }).join('・') + '</b>') +
+      '　／　内訳：' + (Object.keys(byCat).map(function (k) { return escapeHtml(k) + ' ' + byCat[k]; }).join('、') || '－') +
+      (state.oneLineExcluded ? '　／　活動内容１行のため除外：<b>' + state.oneLineExcluded + '</b> 件' : '');
+
+    var oc = $('other-center');
+    var ocKeys = Object.keys(otherCenters || {});
+    if (ocKeys.length) {
+      var tot = ocKeys.reduce(function (a, k) { return a + otherCenters[k]; }, 0);
+      oc.innerHTML = '⚠ <b>他センターに ' + tot + ' 件</b>の該当があります（' +
+        ocKeys.map(function (k) { return escapeHtml(k) + ' ' + otherCenters[k] + '件'; }).join('、') +
+        '）。全国分を見るにはセンターを<b>「すべてのセンター」</b>に変更してください。';
+      oc.style.display = 'block';
+    } else { oc.style.display = 'none'; }
+
+    var diag = $('diag');
+    if (key) {
+      var nameHits = out.filter(function (r) { return r.hitBy === 'name'; }).length;
+      var msg = '<b>取りこぼし診断</b>：現在の条件で「' + escapeHtml(nameRaw) + '」を含むセルは <b>' + cellsContaining + '</b> 件。' +
+        'うち事務所名として抽出できたもの <b>' + nameHits + '</b> 件';
+      if (extra > 0) {
+        msg += '、本文中の言及のみで検出したもの <b class="warn2">' + extra + '</b> 件（「検出」列が<span class="badge b-body">本文</span>の行）。';
+      } else if (cellsContaining > nameHits) {
+        msg += '。<b class="warn2">' + (cellsContaining - nameHits) + ' 件が未表示です。</b>「本文中の言及も検索する」をONにしてください。';
+      } else {
+        msg += '（取りこぼしなし）。';
+      }
+      diag.innerHTML = msg;
+      diag.style.display = 'block';
+    } else { diag.style.display = 'none'; }
+
+    var sug = $('suggest');
+    if (!out.length && key) {
+      var pool = {};
+      state.records.forEach(function (r) {
+        if (center && r.centerN !== center) return;
+        if (r.tier) r.officeNames.forEach(function (n) { pool[n] = 1; });
+      });
+      var cand = Object.keys(pool).map(function (n) {
+        var k = C.matchKey(n), sc2 = 0;
+        for (var i = 0; i < key.length - 1; i++) if (k.indexOf(key.substr(i, 2)) >= 0) sc2++;
+        return [n, sc2 / Math.max(1, key.length - 1)];
+      }).filter(function (x) { return x[1] >= 0.5; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8);
+      sug.innerHTML = cand.length
+        ? '該当0件でした。表記が近い事務所名：' + cand.map(function (x) {
+          return '<span class="gaz" data-name="' + escapeHtml(x[0]) + '">' + escapeHtml(x[0]) + '</span>';
+        }).join('')
+        : '該当0件でした。センターの選択、または事務所名の表記をご確認ください。';
+      sug.style.display = 'block';
+    } else { sug.style.display = 'none'; }
+
+    var limit = 3000;   // v15：800→3000件に拡大
+    $('tbody').innerHTML = out.slice(0, limit).map(function (r) {
+      var link = /^https?:\/\//i.test(r.doc)
+        ? '<a href="' + escapeHtml(r.doc) + '" target="_blank" rel="noopener">提案書</a>' : '';
+      var isBody = r.hitBy === 'body';
+      var text = displayText(r);
+      var body = escapeHtml(text).replace(/\r?\n/g, '<br>');
+      var tierLabel = ['未特定', '項目名', '型推定', '辞書', '文中推定'][r.tier] || '';
+      var badge = isBody ? '<span class="badge b-body">本文</span>' : '<span class="badge b-name">名称</span>';
+      return '<tr' + (isBody ? ' class="rowbody"' : '') + '>' +
+        '<td><b>' + escapeHtml(r.dateText) + '</b></td>' +
+        '<td>' + badge + '</td>' +
+        '<td>' + escapeHtml(r.centerN) + '</td>' +
+        '<td>' + escapeHtml(r.person) + '</td>' +
+        '<td><span class="tag t-' + r.catKey + '" title="' + escapeHtml(r.catLabel) + '">' + escapeHtml(r.catShort) + '</span></td>' +
+        '<td><b>' + escapeHtml(r.office) + '</b><br><span class="sub">' + tierLabel + '</span></td>' +
+        '<td>' + escapeHtml(r.theme) + '<br><span class="sub">' + escapeHtml(r.result) + '</span></td>' +
+        '<td class="body"><div class="clamp">' + (body || '<span class="sub">（本文なし）</span>') + '</div></td>' +
+        '<td>' + link + '</td>' +
+        '</tr>';
+    }).join('') || '<tr><td colspan="9" class="empty">該当するデータがありません。</td></tr>';
+    applyWidths();
+    applyFullAll();
+    $('limit-note').style.display = out.length > limit ? 'block' : 'none';
+    $('limit-note').textContent = '※ 画面表示は先頭 ' + limit + ' 件までです（Excel出力には ' + out.length.toLocaleString() + ' 件すべて含まれます）。';
+  }
+
+  /* ---------- 一括診断 ---------- */
+  function runAudit() {
+    if (!state.records.length) { alert('先に週報Excelを取り込んでください。'); return; }
+    var sc = currentScope();
+    if (!sc.cats.length) { alert('出力する内容を1つ以上選択してください。'); return; }
+
+    var cells = [], seenCell = {}, nameHit = {}, names = {};
+    state.records.forEach(function (r) {
+      if (!sc.pass(r)) return;
+      var k = r.file + '|' + r.rowNo + '|' + r.catKey;
+      if (!seenCell[k]) { seenCell[k] = 1; cells.push(r.cellKey); }
+      if (r.tier) {
+        r.officeNames.forEach(function (n) {
+          var ok = C.matchKey(n);
+          if (!ok) return;
+          nameHit[ok] = (nameHit[ok] || 0) + 1;
+          if (!names[ok] || names[ok].length < n.length) names[ok] = n;
+        });
+      }
+    });
+    var keys = Object.keys(names);
+    if (!keys.length || !cells.length) { alert('診断対象がありません。条件をご確認ください。'); return; }
+    if (keys.length * cells.length > 30000000) {
+      if (!confirm('対象が大きく（事務所 ' + keys.length + ' 件 × セル ' + cells.length + ' 件）、時間がかかる可能性があります。実行しますか？\n※センターを選択すると高速になります。')) return;
+    }
+
+    $('busy').style.display = 'flex';
+    setTimeout(function () {
+      try {
+        var rows = [];
+        for (var i = 0; i < keys.length; i++) {
+          var k = keys[i], cnt = 0;
+          for (var j = 0; j < cells.length; j++) if (cells[j].indexOf(k) >= 0) cnt++;
+          var miss = cnt - (nameHit[k] || 0);
+          if (miss > 0) rows.push({ name: names[k], total: cnt, hit: nameHit[k] || 0, miss: miss });
+        }
+        rows.sort(function (a, b) { return b.miss - a.miss; });
+        renderAudit(rows, keys.length, cells.length, sc.center);
+      } catch (e) {
+        log('× 一括診断エラー：' + (e && e.message ? e.message : e), 'err');
+      }
+      $('busy').style.display = 'none';
+    }, 30);
+  }
+
+  function renderAudit(rows, nOffice, nCell, center) {
+    var box = $('audit-result');
+    var head = '<div class="auditbar">対象：<b>' + escapeHtml(center || '全センター') + '</b>／事務所 <b>' + nOffice +
+      '</b> 件 × セル <b>' + nCell + '</b> 件を照合しました。</div>';
+    if (!rows.length) {
+      box.innerHTML = head + '<div class="ok2">✅ 取りこぼしは検出されませんでした。</div>';
+      box.style.display = 'block';
+      return;
+    }
+    var totalMiss = rows.reduce(function (a, x) { return a + x.miss; }, 0);
+    box.innerHTML = head +
+      '<div class="ng2">⚠ <b>' + rows.length + '</b> 事務所で計 <b>' + totalMiss + '</b> 件の取りこぼし候補があります。' +
+      '「本文中の言及も検索する」がONなら検索時に表示されます。事務所名をクリックすると検索欄に入ります。</div>' +
+      '<div class="tblwrap" style="max-height:260px;margin-top:8px"><table class="plain"><thead><tr>' +
+      '<th>会員事務所名／税理士名</th><th>出現セル数</th><th>名称で抽出</th><th>取りこぼし</th></tr></thead><tbody>' +
+      rows.slice(0, 300).map(function (x) {
+        return '<tr><td><span class="gaz" data-name="' + escapeHtml(x.name) + '">' + escapeHtml(x.name) + '</span></td>' +
+          '<td class="nw">' + x.total + '</td><td class="nw">' + x.hit + '</td>' +
+          '<td class="nw"><b class="warn2">' + x.miss + '</b></td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      (rows.length > 300 ? '<div class="note">※ 先頭300件を表示しています。</div>' : '');
+    box.style.display = 'block';
+  }
+
+  /* ---------- Excel出力 ---------- */
+  function exportExcel() {
+    if (!state.filtered.length) { alert('出力対象がありません。先に検索してください。'); return; }
+    var head = ['日付', '検出', 'センター', '代理（氏名）', '区分', '会員事務所名／税理士名', 'テーマ／活動プロセス',
+      '面談前のゴール', '活動結果', '活動内容', '提案書リンク', '元ファイル', '元行'];
+    var aoa = [head];
+    state.filtered.forEach(function (r) {
+      var url = /^https?:\/\//i.test(r.doc) ? r.doc : '';
+      var isBody = r.hitBy === 'body';
+      aoa.push([
+        r.dateText,
+        isBody ? '本文言及' : '名称一致',
+        r.centerN, r.person, r.catLabel, r.office, r.theme, r.goal, r.result,
+        ((isBody ? (r.cell || '') : (r.body || '')) + '').replace(/[ \u3000\t\u00a0]+/g, '').replace(/\r\n/g, '\n'),
+        url ? { f: 'HYPERLINK("' + url.replace(/"/g, '""') + '","提案書を開く")', v: '提案書を開く' } : '',
+        r.file, String(r.rowNo)
+      ]);
+    });
+    var widths = [12, 10, 10, 12, 30, 26, 18, 24, 10, 90, 14, 26, 7];
+    var center = $('center').value || '全センター';
+    var officeName = ($('office').value.trim() || '全事務所');
+    var scgName = ($('scg').value.trim() || '全代理');
+    var sc0 = currentScope();
+    var procTag = sc0.procAll ? '' : '_' + PROCS.filter(function (p) { return sc0.procSel.indexOf(p.key) >= 0; }).map(function (p) { return p.label; }).join('・');
+    var safe = (center + '_' + scgName + '_' + officeName + procTag).replace(/[\\\/:*?"<>|]/g, '_');
+    var d = new Date();
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    var fname = '代理週報抽出_' + safe + '_' +
+      d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + p(d.getHours()) + p(d.getMinutes()) + '.xlsx';
+    $('busy').style.display = 'flex';
+    C.writeXlsx('抽出結果', aoa, widths, window.JSZip).then(function (blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fname;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+      log('○ Excel出力：' + fname + '（' + state.filtered.length + '件）', 'ok');
+    }).catch(function (e) {
+      log('× 出力エラー：' + (e && e.message ? e.message : e), 'err');
+    }).then(function () { $('busy').style.display = 'none'; });
+  }
+
+  /* ---------- イベント ---------- */
+  function init() {
+    loadWidths();
+    renderHead();
+    initResizer();
+
+    var dz = $('dropzone');
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      dz.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); dz.classList.add('over'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      dz.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); dz.classList.remove('over'); });
+    });
+    dz.addEventListener('drop', function (e) { handleFiles(e.dataTransfer.files); });
+    dz.addEventListener('click', function () { $('filepick').click(); });
+    $('filepick').addEventListener('change', function (e) { handleFiles(e.target.files); e.target.value = ''; });
+
+    $('filelist').addEventListener('click', function (e) {
+      var i = e.target.getAttribute('data-del');
+      if (i == null) return;
+      state.files.splice(+i, 1);
+      rebuild();
+    });
+
+    $('cat-all').addEventListener('change', function () {
+      C.CATEGORIES.forEach(function (c) { $('cat-' + c.key).checked = $('cat-all').checked; });
+    });
+    C.CATEGORIES.forEach(function (c) {
+      $('cat-' + c.key).addEventListener('change', function () {
+        $('cat-all').checked = C.CATEGORIES.every(function (x) { return $('cat-' + x.key).checked; });
+      });
+    });
+    $('proc-all').addEventListener('change', function () {
+      var on = $('proc-all').checked;
+      PROCS.forEach(function (p) { $('proc-' + p.key).checked = on; });
+    });
+    $('proc-list').addEventListener('change', function () {
+      $('proc-all').checked = PROCS.every(function (p) { return $('proc-' + p.key).checked; });
+    });
+    function syncProcBox() { $('proc-box').style.opacity = $('cat-kobetsu').checked ? '1' : '.45'; }
+    $('cat-kobetsu').addEventListener('change', syncProcBox);
+    $('cat-all').addEventListener('change', syncProcBox);
+    function togglePeriod() {
+      var on = $('period-range').checked;
+      $('date-from').disabled = !on; $('date-to').disabled = !on;
+    }
+    $('period-all').addEventListener('change', togglePeriod);
+    $('period-range').addEventListener('change', togglePeriod);
+    togglePeriod();
+
+    $('center').addEventListener('change', function () {
+      renderGazList();
+      renderScgList();
+      updateScgHint();
+      $('audit-result').style.display = 'none';
+    });
+    $('btn-search').addEventListener('click', doSearch);
+    $('office').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+    $('scg').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+    $('scg').addEventListener('input', updateScgHint);
+    $('btn-export').addEventListener('click', exportExcel);
+    $('btn-audit').addEventListener('click', runAudit);
+    $('btn-fit').addEventListener('click', autoFitAll);
+    $('btn-fullall').addEventListener('click', function () { fullAll = !fullAll; applyFullAll(); });
+    $('btn-colreset').addEventListener('click', resetWidths);
+    $('btn-clear').addEventListener('click', function () {
+      $('office').value = '';
+      $('scg').value = '';
+      renderScgList();
+      $('result-card').style.display = 'none';
+      state.filtered = [];
+    });
+    $('btn-reset').addEventListener('click', function () {
+      if (!confirm('取り込んだデータをすべて破棄します。よろしいですか？')) return;
+      state.files = []; state.records = []; state.gaz = {}; state.filtered = [];
+      state.centers = []; state.masterCenters = []; state.centerInitialized = false;
+      $('log').innerHTML = ''; $('result-card').style.display = 'none';
+      $('audit-result').style.display = 'none';
+      $('date-from').value = ''; $('date-to').value = '';
+      $('scg').value = '';
+      rebuild();
+    });
+    $('scg-partial').addEventListener('change', updateScgHint);
+    $('scg-exact').addEventListener('change', updateScgHint);
+    $('scglist-toggle').addEventListener('click', function () {
+      var b = $('scglist-body');
+      b.style.display = b.style.display === 'none' || !b.style.display ? 'block' : 'none';
+      $('scglist-toggle').textContent = b.style.display === 'block'
+        ? '参考：代理（氏名）一覧を閉じる ▲' : '参考：代理（氏名）一覧を開く ▼';
+    });
+    $('gaz-filter').addEventListener('input', renderGazList);
+    $('gaz-toggle').addEventListener('click', function () {
+      var b = $('gaz-body');
+      b.style.display = b.style.display === 'none' ? 'block' : 'none';
+      $('gaz-toggle').textContent = b.style.display === 'none'
+        ? '参考：抽出された事務所名・税理士名一覧を開く ▼' : '参考：抽出された事務所名・税理士名一覧を閉じる ▲';
+    });
+    document.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.resizer')) return;   // リサイズ操作は無視
+      var sg = e.target.closest ? e.target.closest('.scg') : null;
+      if (sg && sg.getAttribute('data-scg')) {
+        $('scg').value = sg.getAttribute('data-scg');
+        updateScgHint();
+        $('scg').focus();
+        return;
+      }
+      var g = e.target.closest ? e.target.closest('.gaz') : null;
+      if (g && g.getAttribute('data-name')) {
+        $('office').value = g.getAttribute('data-name');
+        $('office').focus();
+        return;
+      }
+      var td = e.target.closest ? e.target.closest('td.body') : null;
+      if (td) { td.querySelector('.clamp').classList.toggle('open'); }
+    });
+    rebuild();
+  }
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
